@@ -1,0 +1,30 @@
+<svg width="384" height="384" viewBox="0 0 384 384" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="384" height="384" fill="#09090b" rx="38.400000000000006"/>
+  
+  <!-- Shield Icon -->
+  <g transform="translate(192, 192)">
+    <path 
+      d="M0 -122.88 
+         C-92.16 -92.16 -107.52 -30.72 -107.52 30.72
+         C-107.52 92.16 -61.44 122.88 0 138.24
+         C61.44 122.88 107.52 92.16 107.52 30.72
+         C107.52 -30.72 92.16 -92.16 0 -122.88
+         Z"
+      fill="#3b82f6"
+      stroke="#60a5fa"
+      stroke-width="7.68"
+    />
+    
+    <!-- S Letter -->
+    <text 
+      x="0" 
+      y="30.72" 
+      font-family="Arial, sans-serif" 
+      font-size="153.6" 
+      font-weight="bold" 
+      fill="white" 
+      text-anchor="middle"
+    >S</text>
+  </g>
+</svg>

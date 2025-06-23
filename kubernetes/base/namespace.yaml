@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sentinelops
+  labels:
+    name: sentinelops
+    app: sentinelops

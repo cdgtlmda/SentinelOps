@@ -1,0 +1,55 @@
+# Security scanning configuration for SentinelOps
+
+[general]
+# Enable security scanning
+enabled = true
+
+# Scan on every commit
+scan_on_commit = true
+
+# Fail build on critical vulnerabilities
+fail_on_critical = true
+
+# Security scan timeout (seconds)
+timeout = 600
+
+[dependency-scanning]
+# Enable dependency vulnerability scanning
+enabled = true
+
+# Tools to use
+tools = ["safety", "pip-audit", "bandit"]
+
+# Vulnerability database update
+update_before_scan = true
+
+# Severity levels to report
+report_levels = ["critical", "high", "medium"]
+
+# Ignored vulnerabilities (with justification required)
+ignored_vulnerabilities = [
+    # Example: "CVE-2021-12345"  # Justification: Fixed in our code
+]
+
+[sast]
+# Static Application Security Testing
+enabled = true
+
+# SAST tools
+tools = ["bandit", "semgrep", "pylint-security"]
+
+# Custom rules directory
+custom_rules = "configs/security-rules/"
+
+# Confidence threshold
+min_confidence = "medium"
+
+# Severity threshold
+min_severity = "low"
+
+# Exclude patterns
+exclude_patterns = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/venv/*"
+]

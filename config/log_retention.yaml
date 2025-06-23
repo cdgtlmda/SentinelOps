@@ -1,0 +1,32 @@
+custom_buckets:
+- bucketId: security-logs
+  description: Security and incident logs
+  filter: jsonPayload.category="security" OR jsonPayload.event_type="security_incident"
+  retentionDays: 365
+- bucketId: audit-logs
+  description: Audit and compliance logs
+  filter: protoPayload.@type="type.googleapis.com/google.cloud.audit.AuditLog"
+  retentionDays: 2555
+- bucketId: performance-logs
+  description: Performance and metrics logs
+  filter: jsonPayload.category="performance" OR jsonPayload.metric_type=~".+"
+  retentionDays: 90
+log_buckets:
+  _Default: 30
+  _Required: 400
+policies:
+  audit:
+    description: Audit logs retained for compliance (7 years)
+    retentionDays: 2555
+  debug:
+    description: Debug logs retained for 1 week
+    retentionDays: 7
+  default:
+    description: Default retention for most logs
+    retentionDays: 30
+  performance:
+    description: Performance metrics retained for 90 days
+    retentionDays: 90
+  security:
+    description: Security logs retained for 1 year
+    retentionDays: 365

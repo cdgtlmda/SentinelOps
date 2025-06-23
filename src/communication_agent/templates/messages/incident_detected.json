@@ -1,0 +1,9 @@
+{
+  "incident_detected": {
+    "subject": "🚨 Security Incident Detected: {incident_type}",
+    "body": "A new security incident has been detected in your environment.\n\n**Incident Details:**\n- **ID**: {incident_id}\n- **Type**: {incident_type}\n- **Severity**: {severity}\n- **Time**: {timestamp}\n- **Detection Source**: {detection_source}\n\n**Affected Resources:**\n{affected_resources_list}\n\n**Initial Assessment:**\n{initial_assessment}\n\n**Recommended Actions:**\n1. Review the incident details in the SentinelOps dashboard\n2. Assess the potential impact on your systems\n3. Initiate appropriate response procedures\n\n**Dashboard Link:** {dashboard_link}\n\n---\n*This is an automated notification from SentinelOps*",
+    "short": "🚨 {severity} incident: {incident_type} detected on {affected_resources_count} resources",
+    "sms": "ALERT: {severity} security incident ({incident_type}) detected. ID: {incident_id}. Check dashboard: {short_link}",
+    "required_fields": ["incident_id", "incident_type", "severity", "timestamp", "detection_source", "initial_assessment"]
+  }
+}

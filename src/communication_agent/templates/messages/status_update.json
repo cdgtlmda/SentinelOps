@@ -1,0 +1,9 @@
+{
+  "status_update": {
+    "subject": "📈 Status Update: {update_type}",
+    "body": "Status update for your SentinelOps environment.\n\n**Update Type**: {update_type}\n**Period**: {period}\n\n{update_content}\n\n**Key Metrics:**\n{metrics_summary}\n\n**Action Items:**\n{action_items}",
+    "short": "Status update: {update_type} for {period}",
+    "sms": "Status: {update_type}. {brief_summary}",
+    "required_fields": ["update_type", "period", "update_content"]
+  }
+}

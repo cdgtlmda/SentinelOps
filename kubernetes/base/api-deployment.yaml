@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentinelops-api
+  namespace: sentinelops
+  labels:
+    app: sentinelops-api
+    component: api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: sentinelops-api
+  template:
+    metadata:
+      labels:
+        app: sentinelops-api
+        component: api
+    spec:
+      serviceAccountName: sentinelops-api
+      containers:
+      - name: api
+        image: sentinelops-api:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: sentinelops-config
+              key: environment
+        - name: GOOGLE_CLOUD_PROJECT
+          valueFrom:
+            configMapKeyRef:
+              name: sentinelops-config
+              key: project_id
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL

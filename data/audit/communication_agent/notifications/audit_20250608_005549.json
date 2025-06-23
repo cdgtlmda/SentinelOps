@@ -1,0 +1,64 @@
+[
+  {
+    "event_id": "MessageType.INCIDENT_DETECTED_1749344149.494247_notification_sent_1749344149.494831",
+    "event_type": "notification_sent",
+    "timestamp": "2025-06-08T00:55:49.494833+00:00",
+    "notification_id": "MessageType.INCIDENT_DETECTED_1749344149.494247",
+    "channel": "slack",
+    "recipients": [
+      "#test-alerts"
+    ],
+    "subject": "\ud83d\udea8 Security Incident Detected: Suspicious Login",
+    "message_preview": "A new security incident has been detected in your environment.\n\n*Incident Details:*\n- *ID*: detection-notif-001\n- *Type*: Suspicious Login\n- *Severity*: high\n- *Time*: [REDACTED]-08T00:55:[REDACTED]+0",
+    "priority": "high",
+    "status": "delivered",
+    "metadata": {
+      "message_type": "incident_detected",
+      "context": {
+        "incident_id": "detection-notif-001",
+        "incident_type": "Suspicious Login",
+        "severity": "high",
+        "timestamp": "[REDACTED]-08T00:55:[REDACTED]+00:00",
+        "affected_resources": "user-account-123",
+        "detection_source": "detection_agent",
+        "initial_assessment": "Multiple failed login attempts from unknown location"
+      }
+    },
+    "error_details": null,
+    "delivery_time_ms": 0,
+    "read_timestamp": null,
+    "compliance_flags": [],
+    "data_sanitized": true
+  },
+  {
+    "event_id": "MessageType.INCIDENT_DETECTED_1749344149.494247_notification_sent_1749344149.495706",
+    "event_type": "notification_sent",
+    "timestamp": "2025-06-08T00:55:49.495708+00:00",
+    "notification_id": "MessageType.INCIDENT_DETECTED_1749344149.494247",
+    "channel": "email",
+    "recipients": [
+      "security@example.com"
+    ],
+    "subject": "\ud83d\udea8 Security Incident Detected: Suspicious Login",
+    "message_preview": "A new security incident has been detected in your environment.\n\n**Incident Details:**\n- **ID**: detection-notif-001\n- **Type**: Suspicious Login\n- **Severity**: high\n- **Time**: [REDACTED]-08T00:55:[R",
+    "priority": "high",
+    "status": "delivered",
+    "metadata": {
+      "message_type": "incident_detected",
+      "context": {
+        "incident_id": "detection-notif-001",
+        "incident_type": "Suspicious Login",
+        "severity": "high",
+        "timestamp": "[REDACTED]-08T00:55:[REDACTED]+00:00",
+        "affected_resources": "user-account-123",
+        "detection_source": "detection_agent",
+        "initial_assessment": "Multiple failed login attempts from unknown location"
+      }
+    },
+    "error_details": null,
+    "delivery_time_ms": 0,
+    "read_timestamp": null,
+    "compliance_flags": [],
+    "data_sanitized": true
+  }
+]

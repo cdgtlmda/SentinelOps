@@ -1,0 +1,39 @@
+{
+  "webhook_settings": {
+    "retry_attempts": 3,
+    "timeout_seconds": 10,
+    "rate_limit": {
+      "max_messages_per_minute": 10,
+      "burst_limit": 20
+    }
+  },
+  "message_templates": {
+    "incident_detected": {
+      "severity_high": {
+        "color": "danger",
+        "emoji": "\ud83d\udea8"
+      },
+      "severity_medium": {
+        "color": "warning",
+        "emoji": "\u26a0\ufe0f"
+      },
+      "severity_low": {
+        "color": "good",
+        "emoji": "\u2139\ufe0f"
+      }
+    },
+    "remediation_complete": {
+      "color": "good",
+      "emoji": "\u2705"
+    },
+    "analysis_report": {
+      "color": "#1f77b4",
+      "emoji": "\ud83d\udcca"
+    }
+  },
+  "channels": {
+    "default": "#security-incidents",
+    "high_priority": "#security-critical",
+    "reports": "#security-reports"
+  }
+}

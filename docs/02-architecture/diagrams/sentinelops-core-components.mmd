@@ -1,0 +1,154 @@
+flowchart TB
+    subgraph "Detection Agent (extends LlmAgent)"
+        D_Agent[ADK Agent Controller]
+        D_Tools[ADK Tools]
+        D_LogTool[LogMonitoringTool<br/>extends BaseTool]
+        D_AnomalyTool[AnomalyDetectionTool<br/>extends BaseTool]
+        D_RulesTool[RulesEngineTool<br/>extends BaseTool]
+        D_CorrelatorTool[EventCorrelatorTool<br/>extends BaseTool]
+        D_QueryTool[QueryBuilderTool<br/>extends BaseTool]
+        D_DeduplicatorTool[DeduplicatorTool<br/>extends BaseTool]
+        D_TransferTool[TransferToOrchestratorAgentTool<br/>extends BaseTool]
+        
+        D_Agent --> D_Tools
+        D_Tools --> D_LogTool
+        D_Tools --> D_AnomalyTool
+        D_Tools --> D_RulesTool
+        D_Tools --> D_CorrelatorTool
+        D_Tools --> D_QueryTool
+        D_Tools --> D_DeduplicatorTool
+        D_Tools --> D_TransferTool
+    end    
+    subgraph "Analysis Agent (extends LlmAgent)"
+        A_Agent[ADK Agent Controller]
+        A_Tools[ADK Tools]
+        A_AnalysisTool[IncidentAnalysisTool<br/>extends BaseTool]
+        A_GeminiTool[GeminiAnalysisTool<br/>extends BaseTool]
+        A_RecommendationTool[RecommendationTool<br/>extends BaseTool]
+        A_CorrelationTool[CorrelationTool<br/>extends BaseTool]
+        A_ContextTool[ContextTool<br/>extends BaseTool]
+        A_TransferTool[TransferToOrchestratorAgentTool<br/>extends BaseTool]
+        
+        A_Agent --> A_Tools
+        A_Tools --> A_AnalysisTool
+        A_Tools --> A_GeminiTool
+        A_Tools --> A_RecommendationTool
+        A_Tools --> A_CorrelationTool
+        A_Tools --> A_ContextTool
+        A_Tools --> A_TransferTool
+    end    
+    subgraph "Remediation Agent (extends LlmAgent)"
+        R_Agent[ADK Agent Controller]
+        R_Tools[ADK Tools]
+        R_BlockIPTool[BlockIPTool<br/>extends BaseTool]
+        R_IsolateTool[IsolateVMTool<br/>extends BaseTool]
+        R_RevokeTool[RevokeCredentialsTool<br/>extends BaseTool]
+        R_UpdateTool[UpdateFirewallTool<br/>extends BaseTool]
+        R_QuarantineTool[QuarantineFileTool<br/>extends BaseTool]
+        R_TransferTool[TransferToOrchestratorAgentTool<br/>extends BaseTool]
+        
+        R_Agent --> R_Tools
+        R_Tools --> R_BlockIPTool
+        R_Tools --> R_IsolateTool
+        R_Tools --> R_RevokeTool
+        R_Tools --> R_UpdateTool
+        R_Tools --> R_QuarantineTool
+        R_Tools --> R_TransferTool
+    end
+    
+    subgraph "Communication Agent (extends LlmAgent)"
+        C_Agent[ADK Agent Controller]
+        C_Tools[ADK Tools]
+        C_SlackTool[SlackNotificationTool<br/>extends BaseTool]
+        C_EmailTool[EmailNotificationTool<br/>extends BaseTool]
+        C_SMSTool[SMSNotificationTool<br/>extends BaseTool]
+        C_WebhookTool[WebhookTool<br/>extends BaseTool]
+        C_TemplateTool[TemplateRenderingTool<br/>extends BaseTool]
+        C_TransferTool[TransferToOrchestratorAgentTool<br/>extends BaseTool]
+        
+        C_Agent --> C_Tools
+        C_Tools --> C_SlackTool
+        C_Tools --> C_EmailTool
+        C_Tools --> C_SMSTool
+        C_Tools --> C_WebhookTool
+        C_Tools --> C_TemplateTool
+        C_Tools --> C_TransferTool
+    end    
+    subgraph "Orchestrator Agent (extends SentinelOpsBaseAgent)"
+        O_Agent[ADK Agent Controller]
+        O_Tools[ADK Tools]
+        O_TransferAnalysis[TransferToAnalysisAgentTool<br/>extends BaseTool]
+        O_TransferRemediation[TransferToRemediationAgentTool<br/>extends BaseTool]
+        O_TransferCommunication[TransferToCommunicationAgentTool<br/>extends BaseTool]
+        O_TransferDetection[TransferToDetectionAgentTool<br/>extends BaseTool]
+        O_FirestoreTool[FirestoreTool<br/>extends BaseTool]
+        O_WorkflowTool[WorkflowManagementTool<br/>extends BaseTool]
+        
+        O_Agent --> O_Tools
+        O_Tools --> O_TransferAnalysis
+        O_Tools --> O_TransferRemediation
+        O_Tools --> O_TransferCommunication
+        O_Tools --> O_TransferDetection
+        O_Tools --> O_FirestoreTool
+        O_Tools --> O_WorkflowTool
+    end
+        
+        O_Agent --> O_WorkflowManager
+        O_Agent --> O_StateManager
+        O_Agent --> O_ErrorHandler
+        O_Agent --> O_AuditLogger
+        O_Agent --> O_CredentialManager
+    end
+    
+    subgraph "Core Services"
+        Base[Base Agent Class]
+        Exceptions[Exception Handling]
+        Recovery[Recovery System]
+        Secrets[Secrets Management]
+    end
+    
+    %% Cross-Agent Interactions
+    EventBus[Event Bus]
+    
+    D_Agent <--> EventBus
+    A_Agent <--> EventBus
+    R_Agent <--> EventBus
+    C_Agent <--> EventBus
+    O_Agent <--> EventBus    
+    %% Core Service Connections
+    D_Agent --> Base
+    A_Agent --> Base
+    R_Agent --> Base
+    C_Agent --> Base
+    O_Agent --> Base
+    
+    O_ErrorHandler --> Exceptions
+    O_ErrorHandler --> Recovery
+    O_CredentialManager --> Secrets
+    
+    %% Agent Interactions
+    D_EventCorrelator --> A_EventCorrelation
+    A_RecommendationEngine --> R_ActionPlanner
+    R_ExecutionEngine --> C_ReportGenerator
+    O_WorkflowManager --> D_Agent
+    O_WorkflowManager --> A_Agent
+    O_WorkflowManager --> R_Agent
+    O_WorkflowManager --> C_Agent
+    
+    %% Style definitions
+    classDef detection fill:#f9d,stroke:#333,stroke-width:1px;
+    classDef analysis fill:#bbf,stroke:#333,stroke-width:1px;
+    classDef remediation fill:#bfb,stroke:#333,stroke-width:1px;
+    classDef communication fill:#fdb,stroke:#333,stroke-width:1px;
+    classDef orchestrator fill:#bff,stroke:#333,stroke-width:1px;
+    classDef core fill:#ddd,stroke:#333,stroke-width:1px;
+    classDef bus fill:#fbb,stroke:#333,stroke-width:1px;
+    
+    %% Apply styles
+    class D_Agent,D_Tools,D_LogTool,D_AnomalyTool,D_RulesTool,D_CorrelatorTool,D_QueryTool,D_DeduplicatorTool,D_TransferTool detection;
+    class A_Agent,A_Tools,A_AnalysisTool,A_GeminiTool,A_RecommendationTool,A_CorrelationTool,A_ContextTool,A_TransferTool analysis;
+    class R_Agent,R_Tools,R_BlockIPTool,R_IsolateTool,R_RevokeTool,R_UpdateTool,R_QuarantineTool,R_TransferTool remediation;
+    class C_Agent,C_Tools,C_SlackTool,C_EmailTool,C_SMSTool,C_WebhookTool,C_TemplateTool,C_TransferTool communication;
+    class O_Agent,O_Tools,O_TransferAnalysis,O_TransferRemediation,O_TransferCommunication,O_TransferDetection,O_FirestoreTool,O_WorkflowTool orchestrator;
+    class Base,Exceptions,Recovery,Secrets core;
+    class EventBus bus;

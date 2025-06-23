@@ -1,0 +1,8 @@
+{
+  "weekly_report": {
+    "subject": "📊 Weekly Security Report - Week of {week_start}",
+    "body": "Weekly security report for the week of {week_start}.\n\n**Executive Summary:**\n{executive_summary}\n\n**Incident Statistics:**\n- Total Incidents: {total_incidents}\n- Critical: {critical_count}\n- High: {high_count}\n- Medium: {medium_count}\n- Low: {low_count}\n\n**Trend Analysis:**\n{trend_analysis}\n\n**Notable Incidents:**\n{notable_incidents}\n\n**System Performance:**\n{system_performance}\n\n**Recommendations:**\n{recommendations}\n\n**Next Week's Priorities:**\n{next_week_priorities}",
+    "short": "Weekly: {total_incidents} incidents, {critical_count} critical",
+    "required_fields": ["week_start", "total_incidents", "executive_summary"]
+  }
+}

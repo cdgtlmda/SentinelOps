@@ -1,0 +1,40 @@
+{
+  "total_files": 12,
+  "valid_files": 12,
+  "invalid_files": 0,
+  "categories": {
+    "Cloud Functions Unit Tests": {
+      "total": 4,
+      "valid": 4,
+      "invalid": 0,
+      "files": {
+        "test_block_ip_address.py": "valid",
+        "test_isolate_vm.py": "valid",
+        "test_revoke_credentials.py": "valid",
+        "test_update_firewall.py": "valid"
+      }
+    },
+    "Authentication Scripts": {
+      "total": 2,
+      "valid": 2,
+      "invalid": 0,
+      "files": {
+        "test_authentication.py": "valid",
+        "test_authorization.py": "valid"
+      }
+    },
+    "GCP Integration Tests": {
+      "total": 6,
+      "valid": 6,
+      "invalid": 0,
+      "files": {
+        "test_bigquery_connectivity.py": "valid",
+        "test_cloud_functions_invocation.py": "valid",
+        "test_comprehensive_cloud_functions.py": "valid",
+        "test_firestore_operations.py": "valid",
+        "test_load_testing.py": "valid",
+        "test_pubsub_message_flow.py": "valid"
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+# Dockerfile for Orchestration Agent
+FROM python:3.12-slim as builder
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+COPY agents/orchestrator/requirements.txt ./orchestrator-requirements.txt
+
+# Copy ADK if it exists (for local installation)
+COPY adk/ ./adk/
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --user -r requirements.txt && \
+    pip install --no-cache-dir --user -r orchestrator-requirements.txt && \
+    (test -d adk && pip install --no-cache-dir --user -e ./adk || echo "ADK not found locally, using PyPI version")
+
+# Final stage
+FROM python:3.12-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH=/home/appuser/.local/bin:$PATH \
+    ENVIRONMENT=production \
+    AGENT_TYPE=orchestrator \
+    LOG_LEVEL=INFO \
+    MAX_CONCURRENT_INCIDENTS=10
+
+# Create non-root user
+RUN useradd -m -u 1000 appuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy Python dependencies from builder
+COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
+
+# Copy application code
+COPY --chown=appuser:appuser src/ ./src/
+COPY --chown=appuser:appuser config/ ./config/
+COPY --chown=appuser:appuser agents/orchestrator/ ./agents/orchestrator/
+
+# Switch to non-root user
+USER appuser
+
+# Health check - Orchestrator health endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD python -c "import requests; requests.get('http://localhost:8080/health')"
+
+# Expose internal port for health checks and metrics
+EXPOSE 8080
+
+# Run the orchestration agent with simple Cloud Run wrapper
+CMD ["python", "-m", "src.cloud_run_simple_wrapper"]

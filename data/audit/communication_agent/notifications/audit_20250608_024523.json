@@ -1,0 +1,95 @@
+[
+  {
+    "event_id": "MessageType.INCIDENT_DETECTED_1749350723.526699_notification_sent_1749350723.527024",
+    "event_type": "notification_sent",
+    "timestamp": "2025-06-08T02:45:23.527026+00:00",
+    "notification_id": "MessageType.INCIDENT_DETECTED_1749350723.526699",
+    "channel": "slack",
+    "recipients": [
+      "#security-alerts"
+    ],
+    "subject": "\ud83d\udea8 Security Incident Detected: Remediation Complete",
+    "message_preview": "A new security incident has been detected in your environment.\n\n*Incident Details:*\n- *ID*: remediation-confirm-001\n- *Type*: Remediation Complete\n- *Severity*: info\n- *Time*: [REDACTED]-08T02:45:[RED",
+    "priority": "high",
+    "status": "delivered",
+    "metadata": {
+      "message_type": "incident_detected",
+      "context": {
+        "incident_id": "remediation-confirm-001",
+        "incident_type": "Remediation Complete",
+        "severity": "info",
+        "timestamp": "[REDACTED]-08T02:45:[REDACTED]+00:00",
+        "affected_resources": "",
+        "detection_source": "remediation_agent",
+        "initial_assessment": "All remediation actions successfully executed"
+      }
+    },
+    "error_details": null,
+    "delivery_time_ms": 0,
+    "read_timestamp": null,
+    "compliance_flags": [],
+    "data_sanitized": true
+  },
+  {
+    "event_id": "MessageType.INCIDENT_DETECTED_1749350723.526699_notification_sent_1749350723.527729",
+    "event_type": "notification_sent",
+    "timestamp": "2025-06-08T02:45:23.527731+00:00",
+    "notification_id": "MessageType.INCIDENT_DETECTED_1749350723.526699",
+    "channel": "email",
+    "recipients": [
+      "security@example.com"
+    ],
+    "subject": "\ud83d\udea8 Security Incident Detected: Remediation Complete",
+    "message_preview": "A new security incident has been detected in your environment.\n\n**Incident Details:**\n- **ID**: remediation-confirm-001\n- **Type**: Remediation Complete\n- **Severity**: info\n- **Time**: [REDACTED]-08T",
+    "priority": "high",
+    "status": "delivered",
+    "metadata": {
+      "message_type": "incident_detected",
+      "context": {
+        "incident_id": "remediation-confirm-001",
+        "incident_type": "Remediation Complete",
+        "severity": "info",
+        "timestamp": "[REDACTED]-08T02:45:[REDACTED]+00:00",
+        "affected_resources": "",
+        "detection_source": "remediation_agent",
+        "initial_assessment": "All remediation actions successfully executed"
+      }
+    },
+    "error_details": null,
+    "delivery_time_ms": 0,
+    "read_timestamp": null,
+    "compliance_flags": [],
+    "data_sanitized": true
+  },
+  {
+    "event_id": "MessageType.INCIDENT_DETECTED_1749350723.526699_notification_sent_1749350723.528153",
+    "event_type": "notification_sent",
+    "timestamp": "2025-06-08T02:45:23.528154+00:00",
+    "notification_id": "MessageType.INCIDENT_DETECTED_1749350723.526699",
+    "channel": "sms",
+    "recipients": [
+      "+1234567890"
+    ],
+    "subject": "\ud83d\udea8 Security Incident Detected: Remediation Complete",
+    "message_preview": "\ud83d\udea8 info incident: Remediation Complete detected on [affected_resources_count] resources",
+    "priority": "high",
+    "status": "delivered",
+    "metadata": {
+      "message_type": "incident_detected",
+      "context": {
+        "incident_id": "remediation-confirm-001",
+        "incident_type": "Remediation Complete",
+        "severity": "info",
+        "timestamp": "[REDACTED]-08T02:45:[REDACTED]+00:00",
+        "affected_resources": "",
+        "detection_source": "remediation_agent",
+        "initial_assessment": "All remediation actions successfully executed"
+      }
+    },
+    "error_details": null,
+    "delivery_time_ms": 0,
+    "read_timestamp": null,
+    "compliance_flags": [],
+    "data_sanitized": true
+  }
+]

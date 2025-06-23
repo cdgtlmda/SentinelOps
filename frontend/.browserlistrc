@@ -1,0 +1,18 @@
+# Browsers that we support
+
+defaults
+not IE 11
+not op_mini all
+
+# Specific versions for better compatibility
+Chrome >= 90
+Firefox >= 88
+Safari >= 14
+Edge >= 90
+iOS >= 14
+Android >= 10
+
+# Support for modern features
+supports es6-module
+supports css-grid
+supports css-variables

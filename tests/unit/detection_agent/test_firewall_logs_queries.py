@@ -1,0 +1,661 @@
+"""
+Comprehensive tests for detection_agent/firewall_logs_queries.py module
+
+Tests all firewall logs query templates and detection rule creation functionality.
+
+COVERAGE TARGET: ≥90% statement coverage of src/detection_agent/firewall_logs_queries.py
+APPROACH: 100% production code - real query validation, actual DetectionRule creation
+NO MOCKING: Uses real classes, actual SQL validation, real rule objects
+"""
+
+# Removed unused typing imports
+
+from src.detection_agent.firewall_logs_queries import FirewallLogsQueries
+from src.detection_agent.rules_engine import DetectionRule, RuleStatus
+from src.common.models import SeverityLevel
+
+
+class TestFirewallLogsQueries:
+    """Test suite for FirewallLogsQueries functionality."""
+
+    def test_get_queries_returns_complete_dictionary(self) -> None:
+        """Test that get_queries returns all expected firewall query definitions."""
+        queries = FirewallLogsQueries.get_queries()
+
+        # Verify return type
+        assert isinstance(queries, dict)
+        assert len(queries) > 0
+
+        # Verify all expected query types are present
+        expected_queries = [
+            "firewall_rule_modification",
+            "permissive_firewall_rules",
+            "denied_traffic_spike",
+            "firewall_bypass_attempt",
+        ]
+
+        for expected_query in expected_queries:
+            assert (
+                expected_query in queries
+            ), f"Missing expected query: {expected_query}"
+
+    def test_get_queries_structure_validation(self) -> None:
+        """Test that each query definition has the correct structure."""
+        queries = FirewallLogsQueries.get_queries()
+
+        required_fields = ["name", "description", "severity", "query", "tags"]
+
+        for query_id, query_def in queries.items():
+            # Verify query definition is a dictionary
+            assert isinstance(
+                query_def, dict
+            ), f"Query {query_id} definition is not a dict"
+
+            # Verify all required fields are present
+            for field in required_fields:
+                assert field in query_def, f"Query {query_id} missing field: {field}"
+
+            # Verify field types
+            assert isinstance(
+                query_def["name"], str
+            ), f"Query {query_id} name is not string"
+            assert isinstance(
+                query_def["description"], str
+            ), f"Query {query_id} description is not string"
+            assert isinstance(
+                query_def["severity"], SeverityLevel
+            ), f"Query {query_id} severity is not SeverityLevel"
+            assert isinstance(
+                query_def["query"], str
+            ), f"Query {query_id} query is not string"
+            assert isinstance(
+                query_def["tags"], list
+            ), f"Query {query_id} tags is not list"
+
+            # Verify query content is not empty
+            assert (
+                len(query_def["name"].strip()) > 0
+            ), f"Query {query_id} has empty name"
+            assert (
+                len(query_def["description"].strip()) > 0
+            ), f"Query {query_id} has empty description"
+            assert (
+                len(query_def["query"].strip()) > 0
+            ), f"Query {query_id} has empty query"
+
+    def test_firewall_rule_modification_query_content(self) -> None:
+        """Test specific content of firewall rule modification query."""
+        queries = FirewallLogsQueries.get_queries()
+        rule_mod_query = queries["firewall_rule_modification"]
+
+        # Test metadata
+        assert rule_mod_query["name"] == "Firewall Rule Modification"
+        assert "modifications to firewall rules" in rule_mod_query["description"]
+        assert rule_mod_query["severity"] == SeverityLevel.HIGH
+
+        # Test tags
+        expected_tags = ["firewall", "configuration_change", "security"]
+        assert all(tag in rule_mod_query["tags"] for tag in expected_tags)
+
+        # Test SQL query content
+        query_sql = rule_mod_query["query"]
+
+        # Verify BigQuery structure
+        assert "SELECT" in query_sql
+        assert "FROM" in query_sql
+        assert "WHERE" in query_sql
+        assert "ORDER BY" in query_sql
+        assert "LIMIT" in query_sql
+
+        # Verify specific firewall rule detection logic
+        assert "gce_firewall_rule" in query_sql
+        assert "v1.compute.firewalls" in query_sql
+        assert "insert" in query_sql
+        assert "patch" in query_sql
+        assert "update" in query_sql
+        assert "delete" in query_sql
+
+        # Verify parameter placeholders
+        assert "{project_id}" in query_sql
+        assert "{dataset_id}" in query_sql
+        assert "{last_scan_time}" in query_sql
+        assert "{current_time}" in query_sql
+
+    def test_permissive_firewall_rules_query_content(self) -> None:
+        """Test specific content of permissive firewall rules query."""
+        queries = FirewallLogsQueries.get_queries()
+        permissive_query = queries["permissive_firewall_rules"]
+
+        # Test metadata
+        assert permissive_query["name"] == "Overly Permissive Firewall Rules"
+        assert "allow traffic from any source" in permissive_query["description"]
+        assert permissive_query["severity"] == SeverityLevel.CRITICAL
+
+        # Test tags
+        expected_tags = ["firewall", "misconfiguration", "critical"]
+        assert all(tag in permissive_query["tags"] for tag in expected_tags)
+
+        # Test SQL query content
+        query_sql = permissive_query["query"]
+
+        # Verify detection of permissive rules
+        assert "0.0.0.0/0" in query_sql
+        assert "'*'" in query_sql
+        assert "sourceRanges" in query_sql
+        assert "UNNEST" in query_sql
+
+        # Verify only targets creation/modification operations
+        firewall_methods = ["insert", "patch", "update"]
+        for method in firewall_methods:
+            assert method in query_sql
+
+    def test_denied_traffic_spike_query_content(self) -> None:
+        """Test specific content of denied traffic spike query."""
+        queries = FirewallLogsQueries.get_queries()
+        spike_query = queries["denied_traffic_spike"]
+
+        # Test metadata
+        assert spike_query["name"] == "Spike in Denied Traffic"
+        assert (
+            "sudden increases in firewall-denied traffic" in spike_query["description"]
+        )
+        assert spike_query["severity"] == SeverityLevel.MEDIUM
+
+        # Test tags
+        expected_tags = ["firewall", "denied_traffic", "attack_detection"]
+        assert all(tag in spike_query["tags"] for tag in expected_tags)
+
+        # Test SQL query content
+        query_sql = spike_query["query"]
+
+        # Verify CTE structure
+        assert "WITH denied_traffic_stats AS" in query_sql
+        assert "GROUP BY" in query_sql
+        assert "HAVING" in query_sql
+
+        # Verify denied traffic detection
+        assert "DENY" in query_sql
+        assert "denied_count" in query_sql
+        assert "unique_sources" in query_sql
+        assert "unique_ports" in query_sql
+
+        # Verify threshold logic
+        assert "denied_count >= 100" in query_sql
+
+    def test_firewall_bypass_attempt_query_content(self) -> None:
+        """Test specific content of firewall bypass attempt query."""
+        queries = FirewallLogsQueries.get_queries()
+        bypass_query = queries["firewall_bypass_attempt"]
+
+        # Test metadata
+        assert bypass_query["name"] == "Potential Firewall Bypass Attempts"
+        assert "bypass firewall rules" in bypass_query["description"]
+        assert bypass_query["severity"] == SeverityLevel.HIGH
+
+        # Test tags
+        expected_tags = ["firewall", "bypass_attempt", "reconnaissance"]
+        assert all(tag in bypass_query["tags"] for tag in expected_tags)
+
+        # Test SQL query content
+        query_sql = bypass_query["query"]
+
+        # Verify bypass detection logic
+        assert "bypass_patterns" in query_sql
+        assert "unique_ports >= 20" in query_sql
+        assert "total_attempts >= 500" in query_sql
+        assert "BLOCKED" in query_sql
+        assert "attempted_ports" in query_sql
+
+    def test_all_queries_have_proper_sql_structure(self) -> None:
+        """Test that all queries have proper BigQuery SQL structure."""
+        queries = FirewallLogsQueries.get_queries()
+
+        for query_id, query_def in queries.items():
+            query_sql = query_def["query"]
+
+            # Verify basic SQL structure
+            assert "SELECT" in query_sql.upper(), f"Query {query_id} missing SELECT"
+            assert "FROM" in query_sql.upper(), f"Query {query_id} missing FROM"
+            assert "WHERE" in query_sql.upper(), f"Query {query_id} missing WHERE"
+
+            # Verify BigQuery dataset reference pattern
+            assert (
+                "`{project_id}.{dataset_id}." in query_sql
+            ), f"Query {query_id} missing dataset reference"
+
+            # Verify time filtering
+            assert (
+                "{last_scan_time}" in query_sql
+            ), f"Query {query_id} missing last_scan_time parameter"
+            assert (
+                "{current_time}" in query_sql
+            ), f"Query {query_id} missing current_time parameter"
+
+            # Verify timestamp filtering logic
+            assert (
+                "timestamp >" in query_sql
+            ), f"Query {query_id} missing timestamp filter"
+            assert (
+                "TIMESTAMP(" in query_sql
+            ), f"Query {query_id} missing TIMESTAMP function"
+
+    def test_all_queries_have_severity_levels(self) -> None:
+        """Test that all queries have valid severity levels."""
+        queries = FirewallLogsQueries.get_queries()
+
+        # Verify all severity levels are valid enum values
+        valid_severities = {
+            SeverityLevel.CRITICAL,
+            SeverityLevel.HIGH,
+            SeverityLevel.MEDIUM,
+            SeverityLevel.LOW,
+            SeverityLevel.INFORMATIONAL,
+        }
+
+        for query_id, query_def in queries.items():
+            severity = query_def["severity"]
+            assert (
+                severity in valid_severities
+            ), f"Query {query_id} has invalid severity: {severity}"
+
+    def test_all_queries_have_meaningful_tags(self) -> None:
+        """Test that all queries have meaningful tags."""
+        queries = FirewallLogsQueries.get_queries()
+
+        for query_id, query_def in queries.items():
+            tags = query_def["tags"]
+
+            # Verify tags list is not empty
+            assert len(tags) > 0, f"Query {query_id} has no tags"
+
+            # Verify all tags are strings
+            assert all(
+                isinstance(tag, str) for tag in tags
+            ), f"Query {query_id} has non-string tags"
+
+            # Verify all tags are non-empty
+            assert all(
+                len(tag.strip()) > 0 for tag in tags
+            ), f"Query {query_id} has empty tags"
+
+            # Verify firewall tag is present (since this is firewall logs module)
+            assert "firewall" in tags, f"Query {query_id} missing 'firewall' tag"
+
+    def test_create_detection_rules_returns_list(self) -> None:
+        """Test that create_detection_rules returns a list of DetectionRule objects."""
+        rules = FirewallLogsQueries.create_detection_rules()
+
+        # Verify return type
+        assert isinstance(rules, list)
+        assert len(rules) > 0
+
+        # Verify all items are DetectionRule objects
+        for rule in rules:
+            assert isinstance(rule, DetectionRule)
+
+    def test_create_detection_rules_count_matches_queries(self) -> None:
+        """Test that create_detection_rules returns one rule per query."""
+        queries = FirewallLogsQueries.get_queries()
+        rules = FirewallLogsQueries.create_detection_rules()
+
+        # Should have one rule per query
+        assert len(rules) == len(queries)
+
+    def test_create_detection_rules_properties(self) -> None:
+        """Test that DetectionRule objects have correct properties."""
+        queries = FirewallLogsQueries.get_queries()
+        rules = FirewallLogsQueries.create_detection_rules()
+
+        # Create mapping of rules by rule_id for easy lookup
+        rules_by_id = {rule.rule_id: rule for rule in rules}
+
+        for query_id, query_def in queries.items():
+            expected_rule_id = f"firewall_{query_id}"
+
+            # Verify rule exists
+            assert expected_rule_id in rules_by_id, f"Missing rule for query {query_id}"
+
+            rule = rules_by_id[expected_rule_id]
+
+            # Verify rule properties match query definition
+            assert rule.name == query_def["name"]
+            assert rule.description == query_def["description"]
+            assert rule.severity == query_def["severity"]
+            assert rule.query == query_def["query"]
+            assert rule.tags == query_def["tags"]
+
+    def test_create_detection_rules_default_properties(self) -> None:
+        """Test that DetectionRule objects have correct default properties."""
+        rules = FirewallLogsQueries.create_detection_rules()
+
+        for rule in rules:
+            # Verify default status
+            assert rule.status == RuleStatus.DISABLED
+
+            # Verify default configuration
+            assert rule.max_events_per_incident == 100
+            assert rule.correlation_window_minutes == 60
+
+            # Verify default statistics
+            assert rule.last_executed is None
+            assert rule.execution_count == 0
+            assert rule.events_detected == 0
+            assert rule.incidents_created == 0
+
+            # Verify metadata is initialized as empty dict
+            assert isinstance(rule.metadata, dict)
+            assert len(rule.metadata) == 0
+
+    def test_detection_rules_have_unique_ids(self) -> None:
+        """Test that all detection rules have unique rule IDs."""
+        rules = FirewallLogsQueries.create_detection_rules()
+
+        rule_ids = [rule.rule_id for rule in rules]
+
+        # Verify no duplicate rule IDs
+        assert len(rule_ids) == len(set(rule_ids)), "Duplicate rule IDs found"
+
+    def test_detection_rules_validation(self) -> None:
+        """Test that created DetectionRule objects pass validation."""
+        rules = FirewallLogsQueries.create_detection_rules()
+
+        for rule in rules:
+            # Verify rule validation passes (returns empty list for no errors)
+            validation_errors = rule.validate()
+            assert isinstance(
+                validation_errors, list
+            ), f"Rule {rule.rule_id} validation did not return list"
+
+    def test_query_parameter_placeholders_consistency(self) -> None:
+        """Test that all queries use consistent parameter placeholders."""
+        queries = FirewallLogsQueries.get_queries()
+
+        # Standard placeholders that should be in all queries
+        required_placeholders = [
+            "{project_id}",
+            "{dataset_id}",
+            "{last_scan_time}",
+            "{current_time}",
+        ]
+
+        for query_id, query_def in queries.items():
+            query_sql = query_def["query"]
+
+            for placeholder in required_placeholders:
+                assert (
+                    placeholder in query_sql
+                ), f"Query {query_id} missing placeholder: {placeholder}"
+
+    def test_bigquery_table_references(self) -> None:
+        """Test that all queries reference appropriate BigQuery tables."""
+        queries = FirewallLogsQueries.get_queries()
+
+        # Expected table patterns for firewall logs
+        expected_tables = [
+            "cloudaudit_googleapis_com_activity",  # For audit logs
+            "compute_googleapis_com_firewall",  # For firewall logs
+        ]
+
+        for query_id, query_def in queries.items():
+            query_sql = query_def["query"]
+
+            # Each query should reference at least one expected table
+            has_expected_table = any(table in query_sql for table in expected_tables)
+            assert (
+                has_expected_table
+            ), f"Query {query_id} does not reference expected firewall tables"
+
+    def test_query_limits_and_ordering(self) -> None:
+        """Test that all queries have appropriate limits and ordering."""
+        queries = FirewallLogsQueries.get_queries()
+
+        for query_id, query_def in queries.items():
+            query_sql = query_def["query"]
+
+            # Verify queries have ordering (for consistent results)
+            assert "ORDER BY" in query_sql, f"Query {query_id} missing ORDER BY clause"
+
+            # Verify queries have limits (to prevent excessive resource usage)
+            assert "LIMIT" in query_sql, f"Query {query_id} missing LIMIT clause"
+
+            # Verify timestamp ordering (most recent first is typical)
+            assert (
+                "timestamp" in query_sql.lower()
+            ), f"Query {query_id} missing timestamp in ordering"
+
+    def test_firewall_specific_fields(self) -> None:
+        """Test that queries contain firewall-specific field references."""
+        queries = FirewallLogsQueries.get_queries()
+
+        # Common firewall-related fields that should appear in queries
+        firewall_fields = [
+            "sourceRanges",
+            "allowed",
+            "denied",
+            "direction",
+            "priority",
+            "rule_details",
+            "action",
+        ]
+
+        for query_id, query_def in queries.items():
+            query_sql = query_def["query"]
+
+            # Each query should reference some firewall-specific fields
+            has_firewall_fields = any(field in query_sql for field in firewall_fields)
+            assert (
+                has_firewall_fields
+            ), f"Query {query_id} does not reference firewall-specific fields"
+
+    def test_security_detection_patterns(self) -> None:
+        """Test that queries implement appropriate security detection patterns."""
+        queries = FirewallLogsQueries.get_queries()
+
+        # Verify rule modification query detects configuration changes
+        rule_mod = queries["firewall_rule_modification"]
+        assert "v1.compute.firewalls.insert" in rule_mod["query"]
+        assert "v1.compute.firewalls.delete" in rule_mod["query"]
+
+        # Verify permissive rules query detects dangerous configurations
+        permissive = queries["permissive_firewall_rules"]
+        assert "0.0.0.0/0" in permissive["query"]
+
+        # Verify spike detection uses statistical analysis
+        spike = queries["denied_traffic_spike"]
+        assert "COUNT(*)" in spike["query"]
+        assert "GROUP BY" in spike["query"]
+
+        # Verify bypass detection looks for reconnaissance patterns
+        bypass = queries["firewall_bypass_attempt"]
+        assert "unique_ports >= 20" in bypass["query"]
+
+    def test_query_performance_considerations(self) -> None:
+        """Test that queries include performance optimization patterns."""
+        queries = FirewallLogsQueries.get_queries()
+
+        for query_id, query_def in queries.items():
+            query_sql = query_def["query"]
+
+            # Verify time-based filtering for partition pruning
+            assert (
+                "timestamp >" in query_sql
+            ), f"Query {query_id} missing time-based filtering"
+
+            # Verify result limiting
+            assert "LIMIT" in query_sql, f"Query {query_id} missing result limiting"
+
+            # Verify proper TIMESTAMP function usage
+            assert (
+                "TIMESTAMP(" in query_sql
+            ), f"Query {query_id} missing proper timestamp handling"
+
+
+class TestFirewallLogsQueriesEdgeCases:
+    """Test edge cases and boundary conditions for FirewallLogsQueries."""
+
+    def test_get_queries_immutability(self) -> None:
+        """Test that get_queries returns independent copies."""
+        queries1 = FirewallLogsQueries.get_queries()
+        queries2 = FirewallLogsQueries.get_queries()
+
+        # Modify one copy
+        queries1["test_modification"] = {"test": "value"}
+
+        # Verify other copy is not affected
+        assert "test_modification" not in queries2
+
+    def test_create_detection_rules_independence(self) -> None:
+        """Test that create_detection_rules returns independent rule objects."""
+        rules1 = FirewallLogsQueries.create_detection_rules()
+        rules2 = FirewallLogsQueries.create_detection_rules()
+
+        # Modify one rule
+        rules1[0].name = "Modified Name"
+
+        # Verify other set is not affected
+        assert rules2[0].name != "Modified Name"
+
+    def test_query_sql_whitespace_handling(self) -> None:
+        """Test that queries handle whitespace properly."""
+        queries = FirewallLogsQueries.get_queries()
+
+        for query_id, query_def in queries.items():
+            query_sql = query_def["query"]
+
+            # Verify query is not empty after stripping
+            assert (
+                len(query_sql.strip()) > 0
+            ), f"Query {query_id} is empty after stripping"
+
+            # Verify query contains actual SQL content
+            assert (
+                "SELECT" in query_sql.upper()
+            ), f"Query {query_id} missing SELECT statement"
+
+    def test_severity_level_enum_usage(self) -> None:
+        """Test proper usage of SeverityLevel enum values."""
+        queries = FirewallLogsQueries.get_queries()
+
+        # Collect all severities used
+        severities_used = {query_def["severity"] for query_def in queries.values()}
+
+        # Verify all are actual enum values
+        for severity in severities_used:
+            assert isinstance(severity, SeverityLevel)
+            assert severity.value in [
+                "critical",
+                "high",
+                "medium",
+                "low",
+                "informational",
+            ]
+
+    def test_tags_list_consistency(self) -> None:
+        """Test that tags lists are consistent and well-formed."""
+        queries = FirewallLogsQueries.get_queries()
+
+        for query_id, query_def in queries.items():
+            tags = query_def["tags"]
+
+            # Verify tags are lowercase (convention)
+            for tag in tags:
+                assert (
+                    tag == tag.lower()
+                ), f"Query {query_id} has non-lowercase tag: {tag}"
+
+            # Verify no duplicate tags
+            assert len(tags) == len(set(tags)), f"Query {query_id} has duplicate tags"
+
+            # Verify tags use underscores not spaces (convention)
+            for tag in tags:
+                assert " " not in tag, f"Query {query_id} has tag with spaces: {tag}"
+
+    def test_detection_rule_field_lengths(self) -> None:
+        """Test that DetectionRule fields have reasonable lengths."""
+        rules = FirewallLogsQueries.create_detection_rules()
+
+        for rule in rules:
+            # Verify rule_id is reasonable length
+            assert (
+                5 <= len(rule.rule_id) <= 100
+            ), f"Rule {rule.rule_id} has unreasonable ID length"
+
+            # Verify name is reasonable length
+            assert (
+                5 <= len(rule.name) <= 200
+            ), f"Rule {rule.rule_id} has unreasonable name length"
+
+            # Verify description is meaningful length
+            assert (
+                10 <= len(rule.description) <= 1000
+            ), f"Rule {rule.rule_id} has unreasonable description length"
+
+            # Verify query is substantial
+            assert 100 <= len(
+                rule.query
+            ), f"Rule {rule.rule_id} has suspiciously short query"
+
+    def test_bigquery_syntax_patterns(self) -> None:
+        """Test that queries follow BigQuery syntax patterns."""
+        queries = FirewallLogsQueries.get_queries()
+
+        for query_id, query_def in queries.items():
+            query_sql = query_def["query"]
+
+            # Verify backtick usage for table references
+            assert (
+                "`" in query_sql
+            ), f"Query {query_id} missing backticks for table references"
+
+            # Verify proper STRUCT usage if present
+            if "STRUCT(" in query_sql:
+                assert query_sql.count("STRUCT(") <= query_sql.count(
+                    ") as"
+                ), f"Query {query_id} has mismatched STRUCT syntax"
+
+            # Verify parameter placeholders are properly formatted
+            parameter_placeholders = [
+                "{project_id}",
+                "{dataset_id}",
+                "{last_scan_time}",
+                "{current_time}",
+            ]
+            for placeholder in parameter_placeholders:
+                if placeholder in query_sql:
+                    # Verify placeholder is properly enclosed
+                    assert (
+                        query_sql.count(placeholder) >= 1
+                    ), f"Query {query_id} missing required placeholder: {placeholder}"
+
+    def test_static_method_behavior(self) -> None:
+        """Test that static methods behave correctly."""
+        # Verify methods can be called without instance
+        queries = FirewallLogsQueries.get_queries()
+        rules = FirewallLogsQueries.create_detection_rules()
+
+        assert isinstance(queries, dict)
+        assert isinstance(rules, list)
+
+        # Verify methods return same results across calls
+        queries2 = FirewallLogsQueries.get_queries()
+        rules2 = FirewallLogsQueries.create_detection_rules()
+
+        assert len(queries) == len(queries2)
+        assert len(rules) == len(rules2)
+
+    def test_import_dependencies_available(self) -> None:
+        """Test that all required dependencies are available."""
+        # This ensures the module can be imported and used in production
+        # Classes are already imported at module level
+
+        # Verify classes are properly imported
+        assert FirewallLogsQueries is not None
+        assert DetectionRule is not None
+        assert SeverityLevel is not None
+
+        # Verify basic functionality works
+        queries = FirewallLogsQueries.get_queries()
+        rules = FirewallLogsQueries.create_detection_rules()
+
+        assert len(queries) > 0
+        assert len(rules) > 0

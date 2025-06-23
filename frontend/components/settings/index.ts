@@ -1,0 +1,6 @@
+export { default as AppearanceSettings } from './appearance-settings'
+export { default as NotificationSettings } from './notification-settings'
+export { default as DisplaySettings } from './display-settings'
+export { default as LanguageSettings } from './language-settings'
+export { default as TimezoneSettings } from './timezone-settings'
+export { default as SettingsSearch } from './settings-search'

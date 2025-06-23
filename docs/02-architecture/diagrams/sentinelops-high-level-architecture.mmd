@@ -1,0 +1,90 @@
+graph TB
+    subgraph "User Interaction"
+        User([Security Engineer])
+        UI[Web Dashboard]
+        API[API Layer]
+        CLI[Command-Line Interface]
+    end
+
+    subgraph "Core Engine"
+        Orchestrator[Orchestrator Agent]
+        Config[Configuration Management]
+        CredentialMgr[Credential Manager]
+        Recovery[Error Recovery System]
+    end
+
+    subgraph "Agent Ecosystem"
+        Detection[Detection Agent]
+        Analysis[Analysis Agent]
+        Remediation[Remediation Agent]
+        Communication[Communication Agent]
+    end
+
+    subgraph "Intelligence Services"
+        Gemini[Gemini API]
+        RulesEngine[Rules Engine]
+        ContextRetrieval[Context Retrieval]
+        IncidentDB[(Incident Database)]
+    end
+
+    subgraph "Cloud Integration"
+        GCP[Google Cloud Platform]
+        BigQuery[BigQuery]
+        ADKTransfer[ADK Transfer System]
+        SecretMgr[Secret Manager]
+        CloudFunctions[Cloud Functions]
+    end
+
+    %% User Flow
+    User <--> UI
+    User <--> CLI
+    UI <--> API
+    CLI <--> API
+    API <--> Orchestrator
+
+    %% Core Engine Connections
+    Orchestrator <--> Config
+    Orchestrator <--> CredentialMgr
+    Orchestrator <--> Recovery
+    
+    %% Agent Connections
+    Orchestrator <--> Detection
+    Orchestrator <--> Analysis
+    Orchestrator <--> Remediation
+    Orchestrator <--> Communication
+    
+    %% Agent Interactions
+    Detection <--> Analysis
+    Analysis <--> Remediation
+    Remediation <--> Communication
+    
+    %% Intelligence Connections
+    Detection <--> RulesEngine
+    Analysis <--> Gemini
+    Analysis <--> ContextRetrieval
+    ContextRetrieval <--> IncidentDB
+    
+    %% GCP Connections
+    Detection <--> BigQuery
+    Detection <--> PubSub
+    Analysis <--> BigQuery
+    Remediation <--> CloudFunctions
+    CredentialMgr <--> SecretMgr
+    
+    %% Style Classes
+    classDef user fill:#f9f,stroke:#333,stroke-width:1px;
+    classDef interface fill:#bbf,stroke:#333,stroke-width:1px;
+    classDef core fill:#bfb,stroke:#333,stroke-width:1px;
+    classDef agent fill:#fbf,stroke:#333,stroke-width:1px;
+    classDef intelligence fill:#fdb,stroke:#333,stroke-width:1px;
+    classDef cloud fill:#bff,stroke:#333,stroke-width:1px;
+    classDef storage fill:#fbb,stroke:#333,stroke-width:1px;
+
+    %% Apply Styles
+    class User user;
+    class UI,API,CLI interface;
+    class Orchestrator,Config,CredentialMgr,Recovery core;
+    class Detection,Analysis,Remediation,Communication agent;
+    class Gemini,RulesEngine,ContextRetrieval intelligence;
+    class GCP,BigQuery,PubSub,SecretMgr,CloudFunctions cloud;
+    class IncidentDB storage;

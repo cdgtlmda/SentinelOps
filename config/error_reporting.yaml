@@ -1,0 +1,28 @@
+error_group_settings:
+  api_errors:
+    filter: jsonPayload.error_category="api"
+    group_by:
+    - jsonPayload.endpoint
+    - jsonPayload.status_code
+  remediation_errors:
+    filter: jsonPayload.error_category="remediation"
+    group_by:
+    - jsonPayload.remediation_type
+    - jsonPayload.target
+  security_errors:
+    filter: jsonPayload.error_category="security"
+    group_by:
+    - jsonPayload.error_type
+    - jsonPayload.agent
+notification_channels:
+  critical_errors:
+    channels:
+    - email
+    - slack
+    filter: severity="CRITICAL"
+    rate_limit: 1 per 5 minutes
+  error_surge:
+    channels:
+    - email
+    filter: severity >= ERROR
+    threshold: 10 errors in 5 minutes

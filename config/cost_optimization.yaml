@@ -1,0 +1,178 @@
+# Cost Optimization Configuration for SentinelOps
+
+# Budget configuration
+budgets:
+  # Overall project budget
+  project_budget:
+    amount: 10000  # USD per month
+    currency: USD
+    include_credit: false
+    threshold_rules:
+      - percent: 50
+        alert_spent_percents: [50]
+      - percent: 80
+        alert_spent_percents: [80]
+      - percent: 90
+        alert_spent_percents: [90]
+      - percent: 100
+        alert_spent_percents: [100]
+      - percent: 110
+        alert_spent_percents: [110]  # Overage alert
+    
+  # Service-specific budgets
+  service_budgets:
+    bigquery:
+      amount: 2000
+      currency: USD
+      include_credit: false
+      threshold_rules:
+        - percent: 80
+          alert_spent_percents: [80]
+        - percent: 100
+          alert_spent_percents: [100]
+    
+    cloud_run:
+      amount: 3000
+      currency: USD
+      include_credit: false
+      threshold_rules:
+        - percent: 80
+          alert_spent_percents: [80]
+        - percent: 100
+          alert_spent_percents: [100]
+    
+    cloud_functions:
+      amount: 1000
+      currency: USD
+      include_credit: false
+      threshold_rules:
+        - percent: 80
+          alert_spent_percents: [80]
+        - percent: 100
+          alert_spent_percents: [100]
+    
+    firestore:
+      amount: 1500
+      currency: USD
+      include_credit: false
+      threshold_rules:
+        - percent: 80
+          alert_spent_percents: [80]
+        - percent: 100
+          alert_spent_percents: [100]
+    
+    pubsub:
+      amount: 500
+      currency: USD
+      include_credit: false
+      threshold_rules:
+        - percent: 80
+          alert_spent_percents: [80]
+        - percent: 100
+          alert_spent_percents: [100]
+
+# Alert notification configuration
+notifications:
+  channels:
+    email:
+      enabled: true
+      recipients:
+        - admin@sentinelops.com
+        - billing@sentinelops.com
+        - devops@sentinelops.com
+    
+    pubsub:
+      enabled: true
+      topic: projects/sentinelops-project/topics/cost-alerts
+    
+    slack:
+      enabled: false
+      webhook_url: ""  # To be configured if Slack integration is needed
+
+# Cost optimization policies
+optimization_policies:
+  # Auto-scaling policies
+  autoscaling:
+    enabled: true
+    scale_down_after_hours: true
+    business_hours:
+      timezone: UTC
+      start: "08:00"
+      end: "18:00"
+      days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+  
+  # Resource cleanup policies
+  cleanup:
+    enabled: true
+    delete_unused_disks_after_days: 7
+    delete_old_snapshots_after_days: 30
+    delete_unattached_ips_after_hours: 24
+  
+  # Compute optimization
+  compute:
+    use_preemptible_instances: true
+    max_cpu_utilization_before_scale_up: 80
+    min_cpu_utilization_before_scale_down: 20
+    sustained_use_discount: true
+
+# Cost tracking configuration
+tracking:
+  # Billing export settings
+  bigquery_export:
+    dataset: sentinelops_billing
+    table: gcp_billing_export
+    enabled: true
+  
+  # Cost anomaly detection
+  anomaly_detection:
+    enabled: true
+    baseline_days: 30
+    deviation_threshold_percent: 20
+    check_frequency_hours: 6
+  
+  # Cost allocation labels
+  required_labels:
+    - environment  # dev, staging, production
+    - component    # detection, analysis, remediation, etc.
+    - team         # engineering, operations, security
+    - cost-center  # department for accounting
+
+# Reporting configuration
+reporting:
+  # Daily cost reports
+  daily_reports:
+    enabled: true
+    send_time: "09:00"
+    timezone: UTC
+  
+  # Weekly cost analysis
+  weekly_analysis:
+    enabled: true
+    send_day: Monday
+    send_time: "10:00"
+    timezone: UTC
+  
+  # Monthly billing summary
+  monthly_summary:
+    enabled: true
+    send_day: 1  # First day of month
+    send_time: "11:00"
+    timezone: UTC
+
+# Cost limits and actions
+cost_limits:
+  # Hard spending limits
+  hard_limits:
+    daily_limit: 400  # USD
+    weekly_limit: 2500  # USD
+    monthly_limit: 10000  # USD
+  
+  # Actions to take when limits are exceeded
+  limit_actions:
+    - action: notify
+      channels: [email, pubsub]
+    - action: scale_down
+      services: [cloud_run, cloud_functions]
+      scale_percent: 50
+    - action: disable_non_critical
+      services: [development, staging]

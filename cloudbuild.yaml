@@ -1,0 +1,229 @@
+# Cloud Build configuration for SentinelOps with CI/CD Pipeline
+steps:
+  # Step 1: Run linting and code quality checks
+  - name: 'python:3.11-slim'
+    id: 'lint'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      pip install --upgrade pip
+      pip install -e ".[dev]"
+      echo "Running code quality checks..."
+      black --check src tests
+      isort --check-only src tests
+      flake8 src tests
+      mypy src
+      ruff check src tests
+
+  # Step 2: Run security scanning
+  - name: 'python:3.11-slim'
+    id: 'security'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      pip install bandit[toml] safety pip-audit
+      echo "Running security scans..."
+      bandit -r src -f json -o /workspace/bandit-report.json
+      safety check --json > /workspace/safety-report.json || true
+      pip-audit --format json --output /workspace/pip-audit-report.json || true
+
+  # Step 3: Run unit tests with coverage
+  - name: 'python:3.11-slim'
+    id: 'test'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      pip install --upgrade pip
+      pip install -e ".[dev]"
+      mkdir -p tests/fixtures
+      echo "environment: test" > tests/fixtures/test_config.yaml
+      export SENTINELOPS_TEST_MODE=true
+      pytest tests -v -m "unit" --cov=src --cov-report=xml --cov-report=term-missing
+      coverage report --fail-under=90
+
+  # Step 4: Run integration tests
+  - name: 'python:3.11-slim'
+    id: 'integration-test'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      pip install --upgrade pip
+      pip install -e ".[dev]"
+      export SENTINELOPS_TEST_MODE=true
+      export GOOGLE_APPLICATION_CREDENTIALS=/workspace/service-account-key.json
+      pytest tests -v -m "integration"
+    waitFor: ['test']
+
+  # Step 5: Build all agent Docker images in parallel
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-detection'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/sentinelops-detection:$COMMIT_SHA', './agents/detection']
+    waitFor: ['test']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-analysis'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/sentinelops-analysis:$COMMIT_SHA', './agents/analysis']
+    waitFor: ['test']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-remediation'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/sentinelops-remediation:$COMMIT_SHA', './agents/remediation']
+    waitFor: ['test']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-communication'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/sentinelops-communication:$COMMIT_SHA', './agents/communication']
+    waitFor: ['test']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-orchestrator'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/sentinelops-orchestrator:$COMMIT_SHA', './agents/orchestrator']
+    waitFor: ['test']
+
+  # Step 6: Build main API Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-api'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/sentinelops:$COMMIT_SHA', '.']
+    waitFor: ['test']
+
+  # Step 7: Tag images with latest
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'tag-images'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      docker tag gcr.io/$PROJECT_ID/sentinelops:$COMMIT_SHA gcr.io/$PROJECT_ID/sentinelops:latest
+      docker tag gcr.io/$PROJECT_ID/sentinelops-detection:$COMMIT_SHA gcr.io/$PROJECT_ID/sentinelops-detection:latest
+      docker tag gcr.io/$PROJECT_ID/sentinelops-analysis:$COMMIT_SHA gcr.io/$PROJECT_ID/sentinelops-analysis:latest
+      docker tag gcr.io/$PROJECT_ID/sentinelops-remediation:$COMMIT_SHA gcr.io/$PROJECT_ID/sentinelops-remediation:latest
+      docker tag gcr.io/$PROJECT_ID/sentinelops-communication:$COMMIT_SHA gcr.io/$PROJECT_ID/sentinelops-communication:latest
+      docker tag gcr.io/$PROJECT_ID/sentinelops-orchestrator:$COMMIT_SHA gcr.io/$PROJECT_ID/sentinelops-orchestrator:latest
+    waitFor: ['build-api', 'build-detection', 'build-analysis', 'build-remediation', 'build-communication', 'build-orchestrator']
+
+  # Step 8: Push all images to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-images'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      docker push gcr.io/$PROJECT_ID/sentinelops:$COMMIT_SHA
+      docker push gcr.io/$PROJECT_ID/sentinelops:latest
+      docker push gcr.io/$PROJECT_ID/sentinelops-detection:$COMMIT_SHA
+      docker push gcr.io/$PROJECT_ID/sentinelops-detection:latest
+      docker push gcr.io/$PROJECT_ID/sentinelops-analysis:$COMMIT_SHA
+      docker push gcr.io/$PROJECT_ID/sentinelops-analysis:latest
+      docker push gcr.io/$PROJECT_ID/sentinelops-remediation:$COMMIT_SHA
+      docker push gcr.io/$PROJECT_ID/sentinelops-remediation:latest
+      docker push gcr.io/$PROJECT_ID/sentinelops-communication:$COMMIT_SHA
+      docker push gcr.io/$PROJECT_ID/sentinelops-communication:latest
+      docker push gcr.io/$PROJECT_ID/sentinelops-orchestrator:$COMMIT_SHA
+      docker push gcr.io/$PROJECT_ID/sentinelops-orchestrator:latest
+    waitFor: ['tag-images']
+
+  # Step 9: Run performance tests (only on main branch)
+  - name: 'python:3.11-slim'
+    id: 'performance-test'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      if [ "$BRANCH_NAME" = "main" ]; then
+        pip install --upgrade pip
+        pip install -e ".[dev]" locust pytest-benchmark
+        pytest tests/performance -v --benchmark-only
+      else
+        echo "Skipping performance tests on non-main branch"
+      fi
+    waitFor: ['push-images']
+
+  # Step 10: Deploy to appropriate environment
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      # Determine environment based on branch
+      if [ "$BRANCH_NAME" = "main" ]; then
+        ENVIRONMENT="production"
+        REGIONS="us-central1 us-east1 us-west1"
+      elif [ "$BRANCH_NAME" = "develop" ]; then
+        ENVIRONMENT="staging"
+        REGIONS="us-central1"
+      else
+        echo "Skipping deployment for branch: $BRANCH_NAME"
+        exit 0
+      fi
+      
+      # Deploy API service
+      for REGION in $REGIONS; do
+        gcloud run deploy sentinelops-api \
+          --image gcr.io/$PROJECT_ID/sentinelops:$COMMIT_SHA \
+          --region $REGION \
+          --platform managed \
+          --allow-unauthenticated \
+          --memory 2Gi \
+          --cpu 2 \
+          --timeout 300 \
+          --max-instances 10 \
+          --set-env-vars ENVIRONMENT=$ENVIRONMENT,GOOGLE_CLOUD_PROJECT=$PROJECT_ID
+      done
+      
+      # Deploy agent services
+      for AGENT in detection analysis remediation communication orchestrator; do
+        for REGION in $REGIONS; do
+          gcloud run deploy sentinelops-$AGENT \
+            --image gcr.io/$PROJECT_ID/sentinelops-$AGENT:$COMMIT_SHA \
+            --region $REGION \
+            --platform managed \
+            --no-allow-unauthenticated \
+            --memory 1Gi \
+            --cpu 1 \
+            --timeout 300 \
+            --max-instances 5 \
+            --set-env-vars ENVIRONMENT=$ENVIRONMENT,GOOGLE_CLOUD_PROJECT=$PROJECT_ID
+        done
+      done
+    waitFor: ['performance-test']
+
+  # Step 11: Run post-deployment tests
+  - name: 'python:3.11-slim'
+    id: 'smoke-test'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      if [ "$BRANCH_NAME" = "main" ] || [ "$BRANCH_NAME" = "develop" ]; then
+        pip install requests pytest
+        python scripts/test_deploy_${ENVIRONMENT}.py
+      fi
+    waitFor: ['deploy']
+
+# Substitution variables
+substitutions:
+  _ENVIRONMENT: ${_ENVIRONMENT:-development}
+  _DEPLOY_REGION: ${_DEPLOY_REGION:-us-central1}
+
+# Build configuration options
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
+  substitutionOption: 'ALLOW_LOOSE'
+
+# Store test artifacts
+artifacts:
+  objects:
+    location: 'gs://${PROJECT_ID}-build-artifacts/$BUILD_ID'
+    paths:
+      - '/workspace/*-report.json'
+      - '/workspace/coverage.xml'
+      - '/workspace/htmlcov/**'
+
+# Timeout for the entire build
+timeout: '2400s'

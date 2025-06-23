@@ -1,0 +1,125 @@
+replicaCount: 3
+
+image:
+  repository: gcr.io/PROJECT_ID/sentinelops-api
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations:
+    iam.gke.io/gcp-service-account: sentinelops@PROJECT_ID.iam.gserviceaccount.com
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+    - ALL
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: sentinelops.example.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app
+            operator: In
+            values:
+            - sentinelops-api
+        topologyKey: kubernetes.io/hostname
+
+env:
+  ENVIRONMENT: production
+  GOOGLE_CLOUD_PROJECT: sentinelops-prod
+  LOG_LEVEL: INFO
+
+configMap:
+  create: true
+  data: {}
+
+secrets:
+  create: false
+  data: {}
+
+agents:
+  detection:
+    enabled: true
+    replicaCount: 2
+    image:
+      repository: gcr.io/PROJECT_ID/sentinelops-detection
+      tag: ""
+  analysis:
+    enabled: true
+    replicaCount: 2
+    image:
+      repository: gcr.io/PROJECT_ID/sentinelops-analysis
+      tag: ""
+  remediation:
+    enabled: true
+    replicaCount: 2
+    image:
+      repository: gcr.io/PROJECT_ID/sentinelops-remediation
+      tag: ""
+  communication:
+    enabled: true
+    replicaCount: 1
+    image:
+      repository: gcr.io/PROJECT_ID/sentinelops-communication
+      tag: ""
+  orchestrator:
+    enabled: true
+    replicaCount: 1
+    image:
+      repository: gcr.io/PROJECT_ID/sentinelops-orchestrator
+      tag: ""

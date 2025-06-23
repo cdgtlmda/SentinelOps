@@ -1,0 +1,188 @@
+[
+  {
+    "event_id": "MessageType.INCIDENT_DETECTED_1749350724.03552_notification_sent_1749350724.03594",
+    "event_type": "notification_sent",
+    "timestamp": "2025-06-08T02:45:24.035943+00:00",
+    "notification_id": "MessageType.INCIDENT_DETECTED_1749350724.03552",
+    "channel": "slack",
+    "recipients": [
+      "#critical-alerts"
+    ],
+    "subject": "\ud83d\udea8 Security Incident Detected: Workflow Error",
+    "message_preview": "A new security incident has been detected in your environment.\n\n*Incident Details:*\n- *ID*: orchestrator-error-001\n- *Type*: Workflow Error\n- *Severity*: critical\n- *Time*: [REDACTED]-08T02:45:[REDACT",
+    "priority": "critical",
+    "status": "delivered",
+    "metadata": {
+      "message_type": "incident_detected",
+      "context": {
+        "incident_id": "orchestrator-error-001",
+        "incident_type": "Workflow Error",
+        "severity": "critical",
+        "timestamp": "[REDACTED]-08T02:45:[REDACTED]+00:00",
+        "affected_resources": "",
+        "detection_source": "orchestrator_agent",
+        "initial_assessment": "Critical error in incident response workflow"
+      }
+    },
+    "error_details": null,
+    "delivery_time_ms": 0,
+    "read_timestamp": null,
+    "compliance_flags": [],
+    "data_sanitized": true
+  },
+  {
+    "event_id": "MessageType.INCIDENT_DETECTED_1749350724.03552_notification_sent_1749350724.03662",
+    "event_type": "notification_sent",
+    "timestamp": "2025-06-08T02:45:24.036622+00:00",
+    "notification_id": "MessageType.INCIDENT_DETECTED_1749350724.03552",
+    "channel": "email",
+    "recipients": [
+      "oncall@example.com"
+    ],
+    "subject": "\ud83d\udea8 Security Incident Detected: Workflow Error",
+    "message_preview": "A new security incident has been detected in your environment.\n\n**Incident Details:**\n- **ID**: orchestrator-error-001\n- **Type**: Workflow Error\n- **Severity**: critical\n- **Time**: [REDACTED]-08T02:",
+    "priority": "critical",
+    "status": "delivered",
+    "metadata": {
+      "message_type": "incident_detected",
+      "context": {
+        "incident_id": "orchestrator-error-001",
+        "incident_type": "Workflow Error",
+        "severity": "critical",
+        "timestamp": "[REDACTED]-08T02:45:[REDACTED]+00:00",
+        "affected_resources": "",
+        "detection_source": "orchestrator_agent",
+        "initial_assessment": "Critical error in incident response workflow"
+      }
+    },
+    "error_details": null,
+    "delivery_time_ms": 0,
+    "read_timestamp": null,
+    "compliance_flags": [],
+    "data_sanitized": true
+  },
+  {
+    "event_id": "MessageType.INCIDENT_DETECTED_1749350724.539631_notification_sent_1749350724.539988",
+    "event_type": "notification_sent",
+    "timestamp": "2025-06-08T02:45:24.539990+00:00",
+    "notification_id": "MessageType.INCIDENT_DETECTED_1749350724.539631",
+    "channel": "slack",
+    "recipients": [
+      "#security-alerts"
+    ],
+    "subject": "\ud83d\udea8 Security Incident Detected: Suspicious Activity",
+    "message_preview": "A new security incident has been detected in your environment.\n\n*Incident Details:*\n- *ID*: multi-agent-001\n- *Type*: Suspicious Activity\n- *Severity*: high\n- *Time*: [REDACTED]-08T02:45:[REDACTED]+00",
+    "priority": "high",
+    "status": "delivered",
+    "metadata": {
+      "message_type": "incident_detected",
+      "context": {
+        "incident_id": "multi-agent-001",
+        "incident_type": "Suspicious Activity",
+        "severity": "high",
+        "timestamp": "[REDACTED]-08T02:45:[REDACTED]+00:00",
+        "affected_resources": "server-123",
+        "detection_source": "detection_agent",
+        "initial_assessment": "Unusual login patterns detected"
+      }
+    },
+    "error_details": null,
+    "delivery_time_ms": 0,
+    "read_timestamp": null,
+    "compliance_flags": [],
+    "data_sanitized": true
+  },
+  {
+    "event_id": "MessageType.INCIDENT_DETECTED_1749350724.539656_notification_sent_1749350724.540751",
+    "event_type": "notification_sent",
+    "timestamp": "2025-06-08T02:45:24.540753+00:00",
+    "notification_id": "MessageType.INCIDENT_DETECTED_1749350724.539656",
+    "channel": "slack",
+    "recipients": [
+      "#security-alerts"
+    ],
+    "subject": "\ud83d\udea8 Security Incident Detected: Analysis Complete",
+    "message_preview": "A new security incident has been detected in your environment.\n\n*Incident Details:*\n- *ID*: multi-agent-001\n- *Type*: Analysis Complete\n- *Severity*: high\n- *Time*: [REDACTED]-08T02:45:[REDACTED]+00:0",
+    "priority": "high",
+    "status": "delivered",
+    "metadata": {
+      "message_type": "incident_detected",
+      "context": {
+        "incident_id": "multi-agent-001",
+        "incident_type": "Analysis Complete",
+        "severity": "high",
+        "timestamp": "[REDACTED]-08T02:45:[REDACTED]+00:00",
+        "affected_resources": "server-123",
+        "detection_source": "analysis_agent",
+        "initial_assessment": "Confirmed unauthorized access attempt. 85% confidence of credential stuffing attack."
+      }
+    },
+    "error_details": null,
+    "delivery_time_ms": 0,
+    "read_timestamp": null,
+    "compliance_flags": [],
+    "data_sanitized": true
+  },
+  {
+    "event_id": "MessageType.INCIDENT_DETECTED_1749350724.539673_notification_sent_1749350724.543546",
+    "event_type": "notification_sent",
+    "timestamp": "2025-06-08T02:45:24.543548+00:00",
+    "notification_id": "MessageType.INCIDENT_DETECTED_1749350724.539673",
+    "channel": "slack",
+    "recipients": [
+      "#security-alerts"
+    ],
+    "subject": "\ud83d\udea8 Security Incident Detected: Remediation Started",
+    "message_preview": "A new security incident has been detected in your environment.\n\n*Incident Details:*\n- *ID*: multi-agent-001\n- *Type*: Remediation Started\n- *Severity*: info\n- *Time*: [REDACTED]-08T02:45:[REDACTED]+00",
+    "priority": "medium",
+    "status": "delivered",
+    "metadata": {
+      "message_type": "incident_detected",
+      "context": {
+        "incident_id": "multi-agent-001",
+        "incident_type": "Remediation Started",
+        "severity": "info",
+        "timestamp": "[REDACTED]-08T02:45:[REDACTED]+00:00",
+        "affected_resources": "server-123",
+        "detection_source": "remediation_agent",
+        "initial_assessment": "Blocking suspicious IPs and forcing password reset"
+      }
+    },
+    "error_details": null,
+    "delivery_time_ms": 0,
+    "read_timestamp": null,
+    "compliance_flags": [],
+    "data_sanitized": true
+  },
+  {
+    "event_id": "MessageType.INCIDENT_DETECTED_1749350724.539689_notification_sent_1749350724.544195",
+    "event_type": "notification_sent",
+    "timestamp": "2025-06-08T02:45:24.544196+00:00",
+    "notification_id": "MessageType.INCIDENT_DETECTED_1749350724.539689",
+    "channel": "slack",
+    "recipients": [
+      "#security-alerts"
+    ],
+    "subject": "\ud83d\udea8 Security Incident Detected: Remediation Complete",
+    "message_preview": "A new security incident has been detected in your environment.\n\n*Incident Details:*\n- *ID*: multi-agent-001\n- *Type*: Remediation Complete\n- *Severity*: info\n- *Time*: [REDACTED]-08T02:45:[REDACTED]+0",
+    "priority": "medium",
+    "status": "delivered",
+    "metadata": {
+      "message_type": "incident_detected",
+      "context": {
+        "incident_id": "multi-agent-001",
+        "incident_type": "Remediation Complete",
+        "severity": "info",
+        "timestamp": "[REDACTED]-08T02:45:[REDACTED]+00:00",
+        "affected_resources": "server-123",
+        "detection_source": "remediation_agent",
+        "initial_assessment": "All remediation actions completed successfully. System secured."
+      }
+    },
+    "error_details": null,
+    "delivery_time_ms": 0,
+    "read_timestamp": null,
+    "compliance_flags": [],
+    "data_sanitized": true
+  }
+]

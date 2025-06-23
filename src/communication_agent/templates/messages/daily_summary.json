@@ -1,0 +1,8 @@
+{
+  "daily_summary": {
+    "subject": "📅 Daily Security Summary - {date}",
+    "body": "Daily security summary for {date}.\n\n**Incident Summary:**\n- New Incidents: {new_incidents_count}\n- Resolved Incidents: {resolved_incidents_count}\n- Active Incidents: {active_incidents_count}\n\n**Top Incidents:**\n{top_incidents_list}\n\n**System Health:**\n{system_health_summary}\n\n**Key Metrics:**\n- Detection Rate: {detection_rate}\n- Average Response Time: {avg_response_time}\n- False Positive Rate: {false_positive_rate}\n\n**Tomorrow's Focus:**\n{tomorrow_focus}",
+    "short": "Daily: {new_incidents_count} new, {resolved_incidents_count} resolved, {active_incidents_count} active",
+    "required_fields": ["date", "new_incidents_count", "resolved_incidents_count", "active_incidents_count"]
+  }
+}

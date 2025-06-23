@@ -1,0 +1,46 @@
+# Staging Environment Configuration
+name: sentinelops-staging
+project_id: your-gcp-project-id
+region: us-central1
+service_account: sentinelops-sa@your-gcp-project-id.iam.gserviceaccount.com
+
+# Cloud Run Configuration
+cloud_run:
+  memory: 2Gi
+  cpu: 2
+  min_instances: 1
+  max_instances: 5
+  timeout: 300
+  allow_unauthenticated: false
+
+# Environment Variables
+env_vars:
+  ENVIRONMENT: staging
+  LOG_LEVEL: INFO
+  ENABLE_PROFILING: "true"
+  ENABLE_TRACING: "true"
+
+# BigQuery Configuration
+bigquery:
+  dataset: sentinelops_staging
+  location: US
+
+# Pub/Sub Configuration
+pubsub:
+  topic_prefix: staging-
+
+# Feature Flags
+features:
+  auto_remediation: true
+  ai_analysis: true
+  slack_notifications: true
+  email_notifications: false
+
+# Security Configuration
+security:
+  require_https: true
+  rate_limit_per_minute: 200
+  allowed_origins:
+    - https://staging.sentinelops.example.com
+    - http://localhost:3000  # For testing
+  api_key_header: X-API-Key

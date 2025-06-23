@@ -1,0 +1,245 @@
+# SentinelOps Monitoring Configuration
+
+monitoring:
+  # Dashboard configurations
+  dashboards:
+    security_overview:
+      name: "SentinelOps Security Overview"
+      widgets:
+        - type: scorecard
+          title: "Active Incidents"
+          metric: "custom.googleapis.com/sentinelops/incidents/active"
+        - type: line_chart
+          title: "Detection Rate"
+          metric: "custom.googleapis.com/sentinelops/detection/rate"
+        - type: pie_chart
+          title: "Incident Severity"
+          metric: "custom.googleapis.com/sentinelops/incidents/by_severity"
+    
+    agent_performance:
+      name: "Agent Performance Dashboard"
+      widgets:
+        - type: line_chart
+          title: "CPU Usage by Agent"
+          metric: "run.googleapis.com/container/cpu/utilizations"
+          group_by: "resource.label.service_name"
+        - type: line_chart
+          title: "Memory Usage by Agent"
+          metric: "run.googleapis.com/container/memory/utilizations"
+          group_by: "resource.label.service_name"
+        - type: line_chart
+          title: "Request Latency"
+          metric: "run.googleapis.com/request_latencies"
+          percentile: 95
+  
+  # Alert policies
+  alerts:
+    - name: "High Error Rate"
+      description: "Alert when error rate exceeds 5%"
+      conditions:
+        - metric: "run.googleapis.com/request_count"
+          filter: 'resource.type="cloud_run_revision" AND metric.label.response_code_class="5xx"'
+          threshold: 0.05
+          comparison: ">"
+          duration: "3m"
+      notification_channels: ["email", "slack"]
+    
+    - name: "High Latency"
+      description: "Alert when 95th percentile latency exceeds 5 seconds"
+      conditions:
+        - metric: "run.googleapis.com/request_latencies"
+          percentile: 95
+          threshold: 5000
+          comparison: ">"
+          duration: "5m"
+      notification_channels: ["email"]
+    
+    - name: "Security Incident Surge"
+      description: "Alert on sudden increase in security incidents"
+      conditions:
+        - metric: "custom.googleapis.com/sentinelops/incidents/rate"
+          threshold_multiplier: 3
+          comparison: ">"
+          duration: "10m"
+      notification_channels: ["email", "slack", "pagerduty"]
+    
+    - name: "Remediation Failures"
+      description: "Alert when remediation success rate drops"
+      conditions:
+        - metric: "custom.googleapis.com/sentinelops/remediation/success_rate"
+          threshold: 0.9
+          comparison: "<"
+          duration: "5m"
+      notification_channels: ["email", "slack"]
+    
+    - name: "Agent Health Check Failed"
+      description: "Alert when agent fails health checks"
+      conditions:
+        - metric: "monitoring.googleapis.com/uptime_check/check_passed"
+          threshold: 1
+          comparison: "="
+          duration: "3m"
+      notification_channels: ["email", "pagerduty"]
+  
+  # Log-based metrics
+  log_metrics:
+    - name: "incident_count"
+      description: "Count of security incidents"
+      filter: 'jsonPayload.event_type="security_incident"'
+      metric_kind: "GAUGE"
+      value_type: "INT64"
+      labels:
+        - key: "severity"
+          extractor: 'EXTRACT(jsonPayload.severity)'
+        - key: "type"
+          extractor: 'EXTRACT(jsonPayload.incident_type)'
+    
+    - name: "remediation_actions"
+      description: "Count of remediation actions"
+      filter: 'jsonPayload.action=~"remediation_.*"'
+      metric_kind: "DELTA"
+      value_type: "INT64"
+      labels:
+        - key: "action_type"
+          extractor: 'EXTRACT(jsonPayload.action_type)'
+        - key: "success"
+          extractor: 'EXTRACT(jsonPayload.success)'
+    
+    - name: "detection_latency"
+      description: "Time to detect threats"
+      filter: 'jsonPayload.event_type="threat_detected"'
+      value_extractor: 'EXTRACT(jsonPayload.detection_latency_ms)'
+      metric_kind: "GAUGE"
+      value_type: "INT64"
+      unit: "ms"
+    
+    - name: "api_errors"
+      description: "API error count by type"
+      filter: 'severity >= ERROR AND jsonPayload.component="api"'
+      metric_kind: "DELTA"
+      value_type: "INT64"
+      labels:
+        - key: "error_type"
+          extractor: 'EXTRACT(jsonPayload.error_type)'
+        - key: "endpoint"
+          extractor: 'EXTRACT(jsonPayload.endpoint)'
+  
+  # Uptime checks
+  uptime_checks:
+    - name: "Orchestrator Health"
+      type: "HTTPS"
+      path: "/health"
+      port: 443
+      frequency: "60s"
+      timeout: "10s"
+      regions: ["USA", "EUROPE"]
+      expected_content: "healthy"
+      service: "sentinelops-orchestrator"
+    
+    - name: "Detection Agent Health"
+      type: "HTTPS"
+      path: "/health"
+      port: 443
+      frequency: "60s"
+      timeout: "10s"
+      regions: ["USA"]
+      service: "sentinelops-detection"
+    
+    - name: "API Endpoint"
+      type: "HTTPS"
+      path: "/api/v1/status"
+      port: 443
+      frequency: "300s"
+      timeout: "10s"
+      regions: ["USA", "EUROPE", "ASIA_PACIFIC"]
+      expected_status_codes: [200, 204]
+  
+  # Log routing
+  log_routing:
+    sinks:
+      - name: "security-logs-to-bigquery"
+        destination: "bigquery"
+        dataset: "sentinelops_security_logs"
+        filter: |
+          jsonPayload.event_type="security_incident" OR
+          jsonPayload.event_type="threat_detected" OR
+          severity >= ERROR
+      
+      - name: "audit-logs-to-storage"
+        destination: "storage"
+        bucket: "sentinelops-audit-logs"
+        filter: 'protoPayload.@type="type.googleapis.com/google.cloud.audit.AuditLog"'
+      
+      - name: "metrics-to-storage"
+        destination: "storage"
+        bucket: "sentinelops-metrics-archive"
+        filter: 'jsonPayload.metric_type=~".+"'
+  
+  # Notification channels
+  notification_channels:
+    email:
+      - address: "security-team@example.com"
+        display_name: "Security Team"
+      - address: "ops-team@example.com"
+        display_name: "Operations Team"
+    
+    slack:
+      webhook_url: "${SLACK_WEBHOOK_URL}"
+      channel: "#security-alerts"
+    
+    pagerduty:
+      integration_key: "${PAGERDUTY_INTEGRATION_KEY}"
+      severity_mapping:
+        CRITICAL: "critical"
+        ERROR: "error"
+        WARNING: "warning"
+        INFO: "info"
+  
+  # SLOs (Service Level Objectives)
+  slos:
+    - name: "API Availability"
+      target: 99.9
+      window: "30d"
+      metric: "run.googleapis.com/request_count"
+      good_filter: 'metric.label.response_code_class!="5xx"'
+    
+    - name: "Detection Latency"
+      target: 95
+      window: "7d"
+      metric: "custom.googleapis.com/sentinelops/detection_latency"
+      threshold: 60000  # 60 seconds
+    
+    - name: "Remediation Success Rate"
+      target: 99
+      window: "30d"
+      metric: "custom.googleapis.com/sentinelops/remediation/success_rate"
+
+# Error reporting configuration
+error_reporting:
+  # Error grouping rules
+  grouping:
+    - name: "API Errors"
+      filter: 'jsonPayload.component="api"'
+      group_by: ["error_type", "endpoint", "status_code"]
+    
+    - name: "Agent Errors"
+      filter: 'resource.type="cloud_run_revision"'
+      group_by: ["service_name", "error_type"]
+    
+    - name: "Remediation Errors"
+      filter: 'jsonPayload.component="remediation"'
+      group_by: ["action_type", "target_type", "error_code"]
+  
+  # Error notification rules
+  notifications:
+    - severity: "CRITICAL"
+      channels: ["email", "slack", "pagerduty"]
+      rate_limit: "1 per 5 minutes"
+    
+    - severity: "ERROR"
+      threshold: "10 in 5 minutes"
+      channels: ["email", "slack"]
+    
+    - severity: "WARNING"
+      threshold: "50 in 30 minutes"
+      channels: ["email"]

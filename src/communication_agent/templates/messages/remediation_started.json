@@ -1,0 +1,9 @@
+{
+  "remediation_started": {
+    "subject": "🔧 Remediation Started: {incident_id}",
+    "body": "Automated remediation has been initiated for incident {incident_id}.\n\n**Remediation Details:**\n- **Action Type**: {action_type}\n- **Target Resources**: {target_resources}\n- **Expected Duration**: {expected_duration}\n- **Initiated By**: {initiated_by}\n\n**Actions Being Taken:**\n{remediation_actions}\n\nYou will be notified when remediation is complete.",
+    "short": "Remediation started for {incident_id}: {action_type}",
+    "sms": "Remediation started for {incident_id}. Action: {action_type}. ETA: {expected_duration}",
+    "required_fields": ["incident_id", "action_type", "target_resources", "expected_duration", "initiated_by"]
+  }
+}

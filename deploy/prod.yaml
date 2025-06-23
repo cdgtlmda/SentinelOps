@@ -1,0 +1,45 @@
+# Production Environment Configuration
+name: sentinelops-prod
+project_id: your-gcp-project-id
+region: us-central1
+service_account: sentinelops-sa@your-gcp-project-id.iam.gserviceaccount.com
+
+# Cloud Run Configuration
+cloud_run:
+  memory: 2Gi
+  cpu: 2
+  min_instances: 1
+  max_instances: 10
+  timeout: 300
+  allow_unauthenticated: false  # Requires authentication in prod
+
+# Environment Variables
+env_vars:
+  ENVIRONMENT: production
+  LOG_LEVEL: INFO
+  ENABLE_PROFILING: "false"
+  ENABLE_TRACING: "true"
+
+# BigQuery Configuration
+bigquery:
+  dataset: sentinelops_prod
+  location: US
+
+# Pub/Sub Configuration
+pubsub:
+  topic_prefix: prod-
+
+# Feature Flags
+features:
+  auto_remediation: true
+  ai_analysis: true
+  slack_notifications: true
+  email_notifications: true
+
+# Security Configuration
+security:
+  require_https: true
+  rate_limit_per_minute: 100
+  allowed_origins:
+    - https://sentinelops.example.com
+  api_key_header: X-API-Key

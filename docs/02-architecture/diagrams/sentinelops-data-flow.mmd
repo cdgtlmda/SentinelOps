@@ -1,0 +1,75 @@
+flowchart TD
+    %% ADK Framework
+    ADK[ADK Framework] --> Transfer[Transfer System]
+    ADK --> Context[Tool Context]
+    
+    %% External Data Sources
+    Logs[Cloud Logs] --> |LogMonitoringTool| D_Ingestion[Log Ingestion]
+    Alerts[Security Alerts] --> |Webhook| D_Ingestion
+    Metrics[System Metrics] --> |MonitoringTool| D_Ingestion
+    
+    %% Detection Flow with ADK Tools
+    D_Ingestion --> D_Filtering[Log Filtering<br/>via QueryBuilderTool]
+    D_Filtering --> D_Processing[Log Processing]
+    D_Processing --> D_Matching[Rule Matching<br/>via RulesEngineTool]
+    D_RuleDB[(Rule Database)] --> D_Matching
+    D_Matching --> |No Match| D_Storage[Log Storage]
+    D_Matching --> |Match| D_SignalGen[Signal Generation<br/>via AnomalyDetectionTool]
+    D_SignalGen --> D_Correlation[Signal Correlation<br/>via EventCorrelatorTool]
+    D_Correlation --> |Low Confidence| D_Storage
+    D_Correlation --> |High Confidence| IncidentCreation[Incident Creation]
+    IncidentCreation --> |TransferToOrchestratorAgentTool| Transfer    
+    %% Analysis Flow with ADK Tools
+    Transfer --> |TransferToAnalysisAgentTool| A_Retrieval[Context Retrieval<br/>via ContextTool]
+    D_Storage --> A_Retrieval
+    HistoricalDB[(Historical Incidents)] --> A_Retrieval
+    A_Retrieval --> A_Analysis[Incident Analysis<br/>via GeminiAnalysisTool]
+    GeminiLLM[Gemini LLM] --> A_Analysis
+    A_Analysis --> A_Classification[Incident Classification]
+    A_Classification --> A_Enrichment[Context Enrichment<br/>via CorrelationTool]
+    A_Enrichment --> A_RiskAssessment[Risk Assessment<br/>via RecommendationTool]
+    A_RiskAssessment --> |Low Risk| TransferComm1[TransferToCommunicationAgentTool]
+    A_RiskAssessment --> |Medium/High Risk| TransferRem[TransferToRemediationAgentTool]
+    TransferComm1 --> |via Transfer System| Notification[Notification]
+    TransferRem --> |via Transfer System| RemediationPlanning[Remediation Planning]
+    
+    %% Remediation Flow with ADK Tools
+    RemediationPlanning --> R_Actions[Action Generation<br/>via Remediation Tools]
+    PlaybookDB[(Playbook Database)] --> R_Actions
+    R_Actions --> R_Approval[Approval Process]
+    R_Approval --> |Denied| TransferComm2[TransferToCommunicationAgentTool]
+    R_Approval --> |Auto-approved| R_Execution[Action Execution<br/>BlockIPTool/IsolateVMTool]
+    R_Approval --> |Manually Approved| R_Execution
+    R_Execution --> R_Verification[Result Verification]
+    R_Verification --> |Failed| RemediationPlanning
+    R_Verification --> |Success| IncidentClosure[Incident Closure]
+    TransferComm2 --> |via Transfer System| Notification    
+    %% Communication Flow with ADK Tools
+    IncidentClosure --> C_ReportGen[Report Generation<br/>via TemplateRenderingTool]
+    Notification --> C_Notification[Stakeholder Notification<br/>SlackTool/EmailTool]
+    C_ReportGen --> C_Distribution[Report Distribution<br/>via Communication Tools]
+    C_Distribution --> C_Feedback[Feedback Collection]
+    C_Feedback --> KnowledgeDB[(Knowledge Base)]
+    
+    %% Continuous Improvement
+    KnowledgeDB --> D_RuleDB
+    KnowledgeDB --> PlaybookDB
+    IncidentClosure --> HistoricalDB
+    
+    %% Style Classes
+    classDef source fill:#f9f,stroke:#333,stroke-width:1px;
+    classDef detection fill:#bbf,stroke:#333,stroke-width:1px;
+    classDef analysis fill:#bfb,stroke:#333,stroke-width:1px;
+    classDef remediation fill:#fbf,stroke:#333,stroke-width:1px;
+    classDef communication fill:#bff,stroke:#333,stroke-width:1px;
+    classDef storage fill:#fdb,stroke:#333,stroke-width:1px;
+    classDef external fill:#ddd,stroke:#333,stroke-width:1px;
+    
+    %% Apply Styles
+    class Logs,Alerts,Metrics source;
+    class D_Ingestion,D_Filtering,D_Processing,D_Matching,D_SignalGen,D_Correlation detection;
+    class A_Retrieval,A_Analysis,A_Classification,A_Enrichment,A_RiskAssessment analysis;
+    class RemediationPlanning,R_Actions,R_Approval,R_Execution,R_Verification remediation;
+    class Notification,C_ReportGen,C_Distribution,C_Feedback,IncidentClosure communication;
+    class D_Storage,HistoricalDB,D_RuleDB,PlaybookDB,KnowledgeDB storage;
+    class GeminiLLM,IncidentCreation external;

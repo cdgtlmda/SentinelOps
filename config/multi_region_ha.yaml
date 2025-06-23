@@ -1,0 +1,26 @@
+multi_region:
+  global:
+    domain: sentinelops.your-gcp-project-id.example.com
+    load_balancer: sentinelops-global-lb
+    ssl_certificate: sentinelops-ssl-cert
+  health_check:
+    healthy_threshold: 2
+    interval_sec: 10
+    path: /health
+    timeout_sec: 5
+    unhealthy_threshold: 3
+  primary:
+    artifact_registry: us-central1-docker.pkg.dev/your-gcp-project-id/sentinelops
+    load_balancer: sentinelops-lb-us-central1
+    priority: 1
+    region: us-central1
+  secondary:
+    artifact_registry: us-east1-docker.pkg.dev/your-gcp-project-id/sentinelops
+    load_balancer: sentinelops-lb-us-east1
+    priority: 2
+    region: us-east1
+  tertiary:
+    artifact_registry: us-west1-docker.pkg.dev/your-gcp-project-id/sentinelops
+    load_balancer: sentinelops-lb-us-west1
+    priority: 3
+    region: us-west1

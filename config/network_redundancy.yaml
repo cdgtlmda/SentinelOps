@@ -1,0 +1,39 @@
+network_redundancy:
+  load_balancing:
+    global_lb:
+      backends:
+      - region: us-central1
+        weight: 70
+      - region: us-east1
+        weight: 20
+      - region: us-west1
+        weight: 10
+      name: sentinelops-global-lb
+      type: HTTPS
+    regional_lbs:
+    - name: sentinelops-lb-us-central1
+      region: us-central1
+      type: INTERNAL
+    - name: sentinelops-lb-us-east1
+      region: us-east1
+      type: INTERNAL
+    - name: sentinelops-lb-us-west1
+      region: us-west1
+      type: INTERNAL
+  vpc_peering:
+    peering_connections:
+    - auto_create_routes: true
+      name: primary-to-secondary
+      network1: sentinelops-vpc-us-central1
+      network2: sentinelops-vpc-us-east1
+    - auto_create_routes: true
+      name: primary-to-tertiary
+      network1: sentinelops-vpc-us-central1
+      network2: sentinelops-vpc-us-west1
+    - auto_create_routes: true
+      name: secondary-to-tertiary
+      network1: sentinelops-vpc-us-east1
+      network2: sentinelops-vpc-us-west1
+    primary_vpc: sentinelops-vpc-us-central1
+    secondary_vpc: sentinelops-vpc-us-east1
+    tertiary_vpc: sentinelops-vpc-us-west1

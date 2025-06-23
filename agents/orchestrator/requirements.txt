@@ -1,0 +1,11 @@
+# Orchestration Agent specific requirements
+google-cloud-pubsub>=2.18.0
+google-cloud-firestore>=2.13.0
+google-cloud-logging>=3.8.0
+google-cloud-monitoring>=2.16.0
+google-cloud-secret-manager>=2.17.0
+fastapi>=0.104.0
+uvicorn>=0.24.0
+prometheus-client>=0.18.0
+pyyaml>=6.0
+asyncio-throttle>=0.1.1

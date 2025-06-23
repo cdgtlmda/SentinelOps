@@ -1,0 +1,10 @@
+{
+  "name": "@v1/api",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'API development script to be implemented'"
+  },
+  "dependencies": {
+    "supabase": "^1.191.3"
+  }
+}

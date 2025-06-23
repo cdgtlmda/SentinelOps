@@ -1,0 +1,72 @@
+{
+  "project_id": "your-gcp-project-id",
+  "quota_alerts": [
+    {
+      "api": "compute.googleapis.com",
+      "metric": "CPUS",
+      "threshold_percentage": 80,
+      "description": "Alert when CPU cores exceeds 80% of limit"
+    },
+    {
+      "api": "compute.googleapis.com",
+      "metric": "INSTANCES",
+      "threshold_percentage": 80,
+      "description": "Alert when VM instances exceeds 80% of limit"
+    },
+    {
+      "api": "compute.googleapis.com",
+      "metric": "DISKS_TOTAL_GB",
+      "threshold_percentage": 80,
+      "description": "Alert when Total disk GB exceeds 80% of limit"
+    },
+    {
+      "api": "bigquery.googleapis.com",
+      "metric": "Query usage per day",
+      "threshold_percentage": 80,
+      "description": "Alert when Daily query limit exceeds 80% of limit"
+    },
+    {
+      "api": "bigquery.googleapis.com",
+      "metric": "Query usage per day per user",
+      "threshold_percentage": 80,
+      "description": "Alert when Per user query limit exceeds 80% of limit"
+    },
+    {
+      "api": "aiplatform.googleapis.com",
+      "metric": "Prediction requests per minute",
+      "threshold_percentage": 80,
+      "description": "Alert when Gemini API calls/min exceeds 80% of limit"
+    },
+    {
+      "api": "aiplatform.googleapis.com",
+      "metric": "Online prediction requests per minute",
+      "threshold_percentage": 80,
+      "description": "Alert when Total predictions/min exceeds 80% of limit"
+    },
+    {
+      "api": "pubsub.googleapis.com",
+      "metric": "Publisher quota",
+      "threshold_percentage": 80,
+      "description": "Alert when Messages per second exceeds 80% of limit"
+    },
+    {
+      "api": "pubsub.googleapis.com",
+      "metric": "Subscriber quota",
+      "threshold_percentage": 80,
+      "description": "Alert when Messages per second exceeds 80% of limit"
+    },
+    {
+      "api": "run.googleapis.com",
+      "metric": "Services",
+      "threshold_percentage": 80,
+      "description": "Alert when Number of services exceeds 80% of limit"
+    },
+    {
+      "api": "run.googleapis.com",
+      "metric": "Concurrent requests",
+      "threshold_percentage": 80,
+      "description": "Alert when Per service exceeds 80% of limit"
+    }
+  ],
+  "monitoring_rules": []
+}

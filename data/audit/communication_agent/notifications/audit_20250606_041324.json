@@ -1,0 +1,33 @@
+[
+  {
+    "event_id": "MessageType.INCIDENT_DETECTED_1749208404.762353_notification_sent_1749208404.762771",
+    "event_type": "notification_sent",
+    "timestamp": "2025-06-06T04:13:24.762774",
+    "notification_id": "MessageType.INCIDENT_DETECTED_1749208404.762353",
+    "channel": "email",
+    "recipients": [
+      "sec@example.com"
+    ],
+    "subject": "\ud83d\udea8 Security Incident Detected: Malware Detection",
+    "message_preview": "A new security incident has been detected in your environment.\n\n**Incident Details:**\n- **ID**: INC-001\n- **Type**: Malware Detection\n- **Severity**: critical\n- **Time**: [REDACTED]-06T04:13:[REDACTED",
+    "priority": "critical",
+    "status": "delivered",
+    "metadata": {
+      "message_type": "incident_detected",
+      "context": {
+        "incident_id": "INC-001",
+        "incident_type": "Malware Detection",
+        "severity": "critical",
+        "timestamp": "[REDACTED]-06T04:13:[REDACTED]",
+        "affected_resources": "workstation-01",
+        "detection_source": "Antivirus",
+        "initial_assessment": "Ransomware detected"
+      }
+    },
+    "error_details": null,
+    "delivery_time_ms": 0,
+    "read_timestamp": null,
+    "compliance_flags": [],
+    "data_sanitized": true
+  }
+]

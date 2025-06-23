@@ -1,0 +1,18 @@
+apiVersion: v2
+name: sentinelops
+description: A Helm chart for SentinelOps - AI-powered security incident response
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - security
+  - incident-response
+  - ai
+  - gcp
+home: https://github.com/yourusername/sentinelops
+sources:
+  - https://github.com/yourusername/sentinelops
+maintainers:
+  - name: SentinelOps Team
+    email: team@sentinelops.io
+dependencies: []

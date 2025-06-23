@@ -1,0 +1,37 @@
+# Development Environment Configuration
+name: sentinelops-dev
+project_id: your-gcp-project-id
+region: us-central1
+service_account: sentinelops-sa@your-gcp-project-id.iam.gserviceaccount.com
+
+# Cloud Run Configuration
+cloud_run:
+  memory: 1Gi
+  cpu: 1
+  min_instances: 0
+  max_instances: 3
+  timeout: 300
+  allow_unauthenticated: true
+
+# Environment Variables
+env_vars:
+  ENVIRONMENT: development
+  LOG_LEVEL: DEBUG
+  ENABLE_PROFILING: "true"
+  ENABLE_TRACING: "true"
+
+# BigQuery Configuration
+bigquery:
+  dataset: sentinelops_dev
+  location: US
+
+# Pub/Sub Configuration
+pubsub:
+  topic_prefix: dev-
+
+# Feature Flags
+features:
+  auto_remediation: false
+  ai_analysis: true
+  slack_notifications: false
+  email_notifications: false

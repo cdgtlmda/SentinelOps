@@ -1,0 +1,33 @@
+[
+  {
+    "event_id": "MessageType.INCIDENT_DETECTED_1749351051.171266_notification_sent_1749351051.17169",
+    "event_type": "notification_sent",
+    "timestamp": "2025-06-08T02:50:51.171692+00:00",
+    "notification_id": "MessageType.INCIDENT_DETECTED_1749351051.171266",
+    "channel": "slack",
+    "recipients": [
+      "#security-alerts"
+    ],
+    "subject": "\ud83d\udea8 Security Incident Detected: Data Exfiltration",
+    "message_preview": "A new security incident has been detected in your environment.\n\n*Incident Details:*\n- *ID*: analysis-format-001\n- *Type*: Data Exfiltration\n- *Severity*: high\n- *Time*: [REDACTED]-08T02:50:[REDACTED]+",
+    "priority": "high",
+    "status": "delivered",
+    "metadata": {
+      "message_type": "incident_detected",
+      "context": {
+        "incident_id": "analysis-format-001",
+        "incident_type": "Data Exfiltration",
+        "severity": "high",
+        "timestamp": "[REDACTED]-08T02:50:[REDACTED]+00:00",
+        "affected_resources": "instance-123, user-456",
+        "detection_source": "analysis_agent",
+        "initial_assessment": "Analysis complete with 92% confidence. Attack techniques: T1048, T1071. Recommendations: Block outbound traffic to suspicious IPs; Rotate affected credentials; Enable enhanced monitoring"
+      }
+    },
+    "error_details": null,
+    "delivery_time_ms": 0,
+    "read_timestamp": null,
+    "compliance_flags": [],
+    "data_sanitized": true
+  }
+]

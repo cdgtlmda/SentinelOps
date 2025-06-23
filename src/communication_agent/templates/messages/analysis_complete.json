@@ -1,0 +1,9 @@
+{
+  "analysis_complete": {
+    "subject": "📊 Analysis Complete: {incident_id}",
+    "body": "Analysis has been completed for security incident {incident_id}.\n\n**Analysis Summary:**\n- **Risk Level**: {risk_level}\n- **Impact Assessment**: {impact_assessment}\n- **Root Cause**: {root_cause}\n- **Affected Systems**: {affected_systems}\n\n**Key Findings:**\n{findings_list}\n\n**Recommended Actions:**\n{recommended_actions}\n\n**Next Steps:**\n{next_steps}\n\n**Full Analysis Report:** {analysis_link}\n\n---\n*Analysis completed at {timestamp}*",
+    "short": "Analysis complete for {incident_id}: Risk level {risk_level}",
+    "sms": "Analysis complete for {incident_id}. Risk: {risk_level}. View report: {short_link}",
+    "required_fields": ["incident_id", "risk_level", "impact_assessment", "root_cause", "affected_systems", "timestamp"]
+  }
+}

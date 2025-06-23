@@ -1,0 +1,35 @@
+health_checks:
+  global_health_check:
+    check_interval_sec: 10
+    healthy_threshold: 2
+    name: sentinelops-global-health
+    port: 443
+    request_path: /health
+    timeout_sec: 5
+    type: HTTPS
+    unhealthy_threshold: 3
+  regional_health_checks:
+    us-central1:
+      endpoints:
+      - sentinelops-detection-us-central1
+      - sentinelops-analysis-us-central1
+      - sentinelops-remediation-us-central1
+      - sentinelops-communication-us-central1
+      - sentinelops-orchestrator-us-central1
+      name: sentinelops-health-us-central1
+    us-east1:
+      endpoints:
+      - sentinelops-detection-us-east1
+      - sentinelops-analysis-us-east1
+      - sentinelops-remediation-us-east1
+      - sentinelops-communication-us-east1
+      - sentinelops-orchestrator-us-east1
+      name: sentinelops-health-us-east1
+    us-west1:
+      endpoints:
+      - sentinelops-detection-us-west1
+      - sentinelops-analysis-us-west1
+      - sentinelops-remediation-us-west1
+      - sentinelops-communication-us-west1
+      - sentinelops-orchestrator-us-west1
+      name: sentinelops-health-us-west1

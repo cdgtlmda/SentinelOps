@@ -1,0 +1,216 @@
+# Secret Rotation Policies for SentinelOps
+# Defines rotation schedules and policies for different types of secrets
+
+rotation_policies:
+  # API Keys
+  api_keys:
+    default_rotation_period: "30d"
+    grace_period: "7d"
+    notification_lead_time: "3d"
+    secrets:
+      - id: "sentinelops-api-keys"
+        services:
+          - "detection-agent"
+          - "analysis-agent"
+          - "remediation-agent"
+          - "communication-agent"
+          - "orchestrator-agent"
+        rotation_period: "30d"
+        auto_rotate: true
+        notification_channels:
+          - "security-team@example.com"
+          - "slack-security-channel"
+      
+      # Note: Vertex AI uses Application Default Credentials
+      # No API key rotation needed for Vertex AI services
+      
+      - id: "slack-api-key"
+        services:
+          - "communication-agent"
+        rotation_period: "90d"
+        auto_rotate: true
+        notification_channels:
+          - "communications-team@example.com"
+  
+  # OAuth Tokens
+  oauth_tokens:
+    default_rotation_period: "7d"
+    grace_period: "1d"
+    notification_lead_time: "12h"
+    secrets:
+      - id: "google-oauth-tokens"
+        services:
+          - "api-gateway"
+        rotation_period: "7d"
+        auto_rotate: true
+        refresh_token_rotation: false
+        notification_channels:
+          - "api-team@example.com"
+      
+      - id: "github-oauth-tokens"
+        services:
+          - "orchestrator-agent"
+        rotation_period: "30d"
+        auto_rotate: true
+        refresh_token_rotation: true
+        notification_channels:
+          - "devops-team@example.com"
+  
+  # Service Account Keys
+  service_accounts:
+    default_rotation_period: "90d"
+    grace_period: "14d"
+    notification_lead_time: "7d"
+    secrets:
+      - id: "sentinelops-sa-keys"
+        services:
+          - "all-agents"
+        rotation_period: "90d"
+        auto_rotate: true
+        key_algorithm: "RSA_2048"
+        notification_channels:
+          - "security-team@example.com"
+          - "ops-team@example.com"
+  
+  # Encryption Keys
+  encryption_keys:
+    default_rotation_period: "180d"
+    grace_period: "30d"
+    notification_lead_time: "14d"
+    secrets:
+      - id: "data-encryption-key"
+        services:
+          - "all-agents"
+        rotation_period: "180d"
+        auto_rotate: true
+        key_type: "AES256"
+        notification_channels:
+          - "security-team@example.com"
+      
+      - id: "communication-encryption-key"
+        services:
+          - "communication-agent"
+        rotation_period: "90d"
+        auto_rotate: true
+        key_type: "AES256"
+        notification_channels:
+          - "communications-team@example.com"
+  
+  # Database Credentials
+  database_credentials:
+    default_rotation_period: "60d"
+    grace_period: "7d"
+    notification_lead_time: "3d"
+    secrets:
+      - id: "firestore-credentials"
+        services:
+          - "all-agents"
+        rotation_period: "60d"
+        auto_rotate: true
+        credential_type: "service_account"
+        notification_channels:
+          - "database-team@example.com"
+      
+      - id: "bigquery-credentials"
+        services:
+          - "detection-agent"
+          - "analysis-agent"
+        rotation_period: "90d"
+        auto_rotate: true
+        credential_type: "service_account"
+        notification_channels:
+          - "data-team@example.com"
+
+# Rotation Configuration
+rotation_config:
+  # Maximum number of versions to keep
+  max_versions: 5
+  
+  # Cleanup old versions after (days)
+  version_cleanup_after: 30
+  
+  # Enable gradual rollout
+  gradual_rollout:
+    enabled: true
+    stages:
+      - percentage: 10
+        duration: "1h"
+      - percentage: 50
+        duration: "2h"
+      - percentage: 100
+        duration: "0"
+  
+  # Health check configuration
+  health_checks:
+    enabled: true
+    timeout: "30s"
+    retry_count: 3
+    retry_delay: "10s"
+  
+  # Rollback configuration
+  rollback:
+    auto_rollback: true
+    health_check_failures_threshold: 2
+    error_rate_threshold: 0.1
+    monitoring_window: "5m"
+
+# Notification Templates
+notification_templates:
+  rotation_scheduled:
+    subject: "Secret Rotation Scheduled: {secret_id}"
+    body: |
+      A secret rotation has been scheduled for {secret_id}.
+      
+      Details:
+      - Current Version: {current_version}
+      - Rotation Time: {rotation_time}
+      - Affected Services: {services}
+      
+      Please ensure all dependent systems are prepared for the rotation.
+  
+  rotation_completed:
+    subject: "Secret Rotation Completed: {secret_id}"
+    body: |
+      Secret rotation has been completed successfully.
+      
+      Details:
+      - Secret ID: {secret_id}
+      - New Version: {new_version}
+      - Rotation Time: {rotation_time}
+      - Updated Services: {updated_services}
+      
+      All systems have been updated with the new credentials.
+  
+  rotation_failed:
+    subject: "ALERT: Secret Rotation Failed: {secret_id}"
+    body: |
+      Secret rotation has failed and requires immediate attention.
+      
+      Details:
+      - Secret ID: {secret_id}
+      - Error: {error_message}
+      - Failed Services: {failed_services}
+      - Time: {failure_time}
+      
+      Please investigate and take corrective action immediately.
+
+# Compliance and Audit
+compliance:
+  # Enable audit logging
+  audit_logging: true
+  
+  # Compliance standards
+  standards:
+    - "SOC2"
+    - "ISO27001"
+    - "PCI-DSS"
+  
+  # Required approvals for manual rotation
+  manual_rotation_approvals:
+    - role: "security-admin"
+      count: 1
+    - role: "ops-lead"
+      count: 1
+  
+  # Retention period for rotation logs
+  log_retention_days: 365

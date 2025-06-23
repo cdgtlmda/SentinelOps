@@ -1,0 +1,79 @@
+sequenceDiagram
+    participant User as Security Engineer
+    participant Orchestrator as Orchestrator Agent<br/>extends LlmAgent
+    participant Detection as Detection Agent<br/>extends LlmAgent
+    participant Analysis as Analysis Agent<br/>extends LlmAgent
+    participant Remediation as Remediation Agent<br/>extends LlmAgent
+    participant Communication as Communication Agent<br/>extends LlmAgent
+    participant TT as ADK Transfer Tools
+    participant GCP as Google Cloud Platform
+    
+    %% Incident Detection Phase
+    Detection->>GCP: Query security logs (LogMonitoringTool)
+    GCP-->>Detection: Log data
+    Detection->>Detection: Apply detection rules (RulesEngineTool)
+    Detection->>TT: TransferToOrchestratorAgentTool
+    TT->>Orchestrator: Transfer incident context
+    Orchestrator->>Orchestrator: Create incident record (FirestoreTool)
+    Orchestrator->>TT: TransferToAnalysisAgentTool
+    TT->>Analysis: Transfer for analysis
+    
+    %% Analysis Phase
+    Analysis->>GCP: Retrieve additional context (ContextTool)
+    GCP-->>Analysis: Context data
+    Analysis->>Analysis: Correlate events (CorrelationTool)
+    Analysis->>Analysis: Generate incident summary (GeminiAnalysisTool)
+    Analysis->>TT: TransferToOrchestratorAgentTool
+    TT->>Orchestrator: Transfer analysis results
+    Orchestrator->>Orchestrator: Update incident record (FirestoreTool)    
+    %% Decision Point
+    alt High Severity Incident
+        Orchestrator->>TT: TransferToRemediationAgentTool
+        TT->>Remediation: Transfer remediation request
+        Orchestrator->>TT: TransferToCommunicationAgentTool
+        TT->>Communication: Transfer alert context
+        Communication->>User: Send high-priority alert (SlackTool)
+    else Medium Severity Incident
+        Orchestrator->>TT: TransferToCommunicationAgentTool
+        TT->>Communication: Transfer approval request
+        Communication->>User: Send approval request (EmailTool)
+        User-->>Communication: Approve remediation
+        Communication->>TT: TransferToOrchestratorAgentTool
+        TT->>Orchestrator: Transfer approval
+        Orchestrator->>TT: TransferToRemediationAgentTool
+        TT->>Remediation: Transfer with approval
+    else Low Severity Incident
+        Orchestrator->>TT: TransferToCommunicationAgentTool
+        TT->>Communication: Transfer for logging
+        Communication->>User: Add to security digest
+    end
+    
+    %% Remediation Phase (for High/Medium)
+    Remediation->>Remediation: Generate remediation plan
+    Remediation->>TT: TransferToOrchestratorAgentTool
+    TT->>Orchestrator: Transfer remediation plan
+    Orchestrator->>Orchestrator: Validate plan
+    Orchestrator->>TT: TransferToRemediationAgentTool
+    TT->>Remediation: Transfer execution approval
+    Remediation->>GCP: Execute remediation steps (BlockIPTool/IsolateVMTool)
+    GCP-->>Remediation: Execution results
+    Remediation->>TT: TransferToOrchestratorAgentTool
+    TT->>Orchestrator: Transfer remediation results    
+    %% Verification and Closure
+    Orchestrator->>TT: TransferToDetectionAgentTool
+    TT->>Detection: Transfer verification request
+    Detection->>GCP: Run verification queries
+    GCP-->>Detection: Verification data
+    Detection->>Orchestrator: Confirm resolution
+    
+    %% Reporting
+    Orchestrator->>Communication: Request incident report
+    Communication->>Communication: Generate comprehensive report
+    Communication->>User: Deliver incident report
+    Communication->>Orchestrator: Report delivery confirmation
+    Orchestrator->>Orchestrator: Close incident
+    
+    %% Learning Phase
+    Orchestrator->>Detection: Update detection rules
+    Orchestrator->>Analysis: Update analysis patterns
+    Orchestrator->>Remediation: Update remediation playbooks

@@ -1,0 +1,16 @@
+[Unit]
+Description=SentinelOps Failover Controller
+After=network.target
+
+[Service]
+Type=simple
+User=sentinelops
+WorkingDirectory=/opt/sentinelops
+ExecStart=/usr/bin/python3 /opt/sentinelops/scripts/failover_controller.py
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

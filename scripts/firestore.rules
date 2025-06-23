@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isServiceAccount() {
+      return request.auth != null && 
+        request.auth.token.email != null &&
+        request.auth.token.email.matches('.*@.*\\.iam\\.gserviceaccount\\.com$');
+    }
+    
+    // Incidents collection
+    match /incidents/{incident} {
+      allow read: if isServiceAccount();
+      allow create: if isServiceAccount();
+      allow update: if isServiceAccount();
+      allow delete: if false;
+    }
+    
+    // Audit logs collection
+    match /audit_logs/{log} {
+      allow read: if isServiceAccount();
+      allow create: if isServiceAccount();
+      allow update, delete: if false;
+    }
+    
+    // Other collections
+    match /{collection}/{document} {
+      allow read: if isServiceAccount();
+      allow write: if isServiceAccount() && 
+        request.auth.token.email == 'sentinelops-sa@your-gcp-project-id.iam.gserviceaccount.com';
+    }
+  }
+}

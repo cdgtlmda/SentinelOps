@@ -1,0 +1,9 @@
+{
+  "critical_alert": {
+    "subject": "🚨🚨 CRITICAL ALERT: {alert_type}",
+    "body": "**IMMEDIATE ATTENTION REQUIRED**\n\n**Alert Type**: {alert_type}\n**Severity**: CRITICAL\n**Time**: {timestamp}\n\n**Alert Details:**\n{alert_details}\n\n**Impact:**\n{impact_description}\n\n**Required Actions:**\n{required_actions}\n\n**Emergency Contact**: {emergency_contact}\n\n⚠️ This is a critical security alert requiring immediate response.",
+    "short": "CRITICAL: {alert_type} - IMMEDIATE ACTION REQUIRED",
+    "sms": "CRITICAL ALERT: {alert_type}. {brief_description}. Call {emergency_contact} NOW.",
+    "required_fields": ["alert_type", "timestamp", "alert_details", "impact_description", "required_actions", "emergency_contact"]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "incident_escalation": {
+    "subject": "⚠️ Incident Escalated: {incident_id}",
+    "body": "Security incident {incident_id} has been escalated.\n\n**Escalation Details:**\n- **Reason**: {escalation_reason}\n- **New Severity**: {new_severity}\n- **Escalated To**: {escalated_to}\n- **Time Since Detection**: {time_since_detection}\n\n**Current Status:**\n{current_status}\n\n**Required Actions:**\n{required_actions}\n\n**Escalation Contact**: {escalation_contact}",
+    "short": "Incident {incident_id} escalated to {new_severity}: {escalation_reason}",
+    "sms": "URGENT: Incident {incident_id} escalated. Severity: {new_severity}. Contact: {escalation_contact}",
+    "required_fields": ["incident_id", "escalation_reason", "new_severity", "escalated_to", "current_status"]
+  }
+}

@@ -1,0 +1,345 @@
+"""REAL tests for analysis_agent/recommendation_engine.py - Testing actual recommendation generation logic."""
+
+import pytest
+import logging
+from typing import Dict, Any, List
+
+# Import the actual production code
+from src.analysis_agent.recommendation_engine import RecommendationEngine
+from src.common.models import SeverityLevel
+
+
+class TestRecommendationEngineReal:
+    """Test RecommendationEngine with REAL recommendation logic - NO MOCKS."""
+    
+    @pytest.fixture
+    def engine(self) -> RecommendationEngine:
+        """Create real RecommendationEngine instance."""
+        logger = logging.getLogger("test_recommendation_engine")
+        return RecommendationEngine(logger)
+    
+    def test_real_generate_recommendations_unauthorized_access(self, engine: RecommendationEngine) -> None:
+        """Test REAL recommendation generation for unauthorized access incident."""
+        # Real incident analysis data
+        incident_analysis = {
+            "incident_type": "unauthorized_access",
+            "severity": SeverityLevel.HIGH,
+            "attack_patterns": ["brute_force", "credential_stuffing"],
+            "affected_resources": [
+                {"type": "user_account", "id": "user123", "name": "admin@example.com"},
+                {"type": "vm_instance", "id": "vm-prod-01", "name": "production-server"}
+            ],
+            "indicators": {
+                "failed_login_attempts": 150,
+                "source_ips": ["192.168.1.100", "192.168.1.101"],
+                "time_window_minutes": 30
+            }
+        }
+        
+        # Generate real recommendations
+        recommendations = engine.generate_recommendations(incident_analysis)
+        
+        # Verify recommendations structure
+        assert isinstance(recommendations, dict)
+        assert "immediate_actions" in recommendations
+        assert "investigation_steps" in recommendations
+        assert "preventive_measures" in recommendations
+        assert "priority" in recommendations
+        
+        # Verify specific recommendations
+        assert len(recommendations["immediate_actions"]) > 0
+        assert any("disable" in action.lower() or "revoke" in action.lower() 
+                  for action in recommendations["immediate_actions"])
+        assert recommendations["priority"] == "high"
+        
+        print(f"\nGenerated {len(recommendations['immediate_actions'])} immediate actions")
+        print(f"Priority: {recommendations['priority']}")
+    
+    def test_real_generate_recommendations_data_exfiltration(self, engine: RecommendationEngine) -> None:
+        """Test REAL recommendation generation for data exfiltration incident."""
+        incident_analysis = {
+            "incident_type": "data_exfiltration",
+            "severity": SeverityLevel.CRITICAL,
+            "attack_patterns": ["large_data_transfer", "unusual_api_calls"],
+            "affected_resources": [
+                {"type": "storage_bucket", "id": "bucket-sensitive", "name": "customer-data"},
+                {"type": "database", "id": "db-prod", "name": "production-db"}
+            ],
+            "indicators": {
+                "data_volume_gb": 150,
+                "destination_ips": ["203.0.113.45"],
+                "exfiltration_method": "api_download"
+            }
+        }
+        
+        # Generate real recommendations
+        recommendations = engine.generate_recommendations(incident_analysis)
+        
+        # Verify critical incident handling
+        assert recommendations["priority"] == "critical"
+        assert len(recommendations["immediate_actions"]) >= 3
+        assert any("block" in action.lower() for action in recommendations["immediate_actions"])
+        assert any("dlp" in measure.lower() or "data loss" in measure.lower() 
+                  for measure in recommendations["preventive_measures"])
+        
+        print(f"\nData exfiltration recommendations: {len(recommendations['immediate_actions'])} immediate actions")
+    
+    def test_real_generate_recommendations_privilege_escalation(self, engine: RecommendationEngine) -> None:
+        """Test REAL recommendation generation for privilege escalation incident."""
+        incident_analysis = {
+            "incident_type": "privilege_escalation",
+            "severity": SeverityLevel.CRITICAL,
+            "attack_patterns": ["iam_policy_modification", "role_assumption"],
+            "affected_resources": [
+                {"type": "service_account", "id": "sa-compromised", "name": "app-service-account"},
+                {"type": "iam_role", "id": "role-admin", "name": "project-admin"}
+            ],
+            "indicators": {
+                "permissions_added": ["iam.roles.create", "iam.roles.update", "compute.instances.delete"],
+                "escalation_method": "role_binding",
+                "time_to_escalation_minutes": 5
+            }
+        }
+        
+        # Generate real recommendations
+        recommendations = engine.generate_recommendations(incident_analysis)
+        
+        # Verify privilege escalation specific recommendations
+        assert any("revoke" in action.lower() and "permission" in action.lower() 
+                  for action in recommendations["immediate_actions"])
+        assert any("iam" in step.lower() for step in recommendations["investigation_steps"])
+        assert any("least privilege" in measure.lower() 
+                  for measure in recommendations["preventive_measures"])
+        
+        print(f"\nPrivilege escalation handled with {len(recommendations['investigation_steps'])} investigation steps")
+    
+    def test_real_generate_recommendations_malware_infection(self, engine: RecommendationEngine) -> None:
+        """Test REAL recommendation generation for malware infection."""
+        incident_analysis = {
+            "incident_type": "malware_infection",
+            "severity": SeverityLevel.HIGH,
+            "attack_patterns": ["cryptominer", "backdoor"],
+            "affected_resources": [
+                {"type": "vm_instance", "id": "vm-infected-01", "name": "web-server-01"},
+                {"type": "vm_instance", "id": "vm-infected-02", "name": "web-server-02"}
+            ],
+            "indicators": {
+                "malware_family": "XMRig",
+                "cpu_usage_percent": 98,
+                "suspicious_processes": ["xmrig", "kworker"],
+                "c2_domains": ["malicious.example.com"]
+            }
+        }
+        
+        # Generate real recommendations
+        recommendations = engine.generate_recommendations(incident_analysis)
+        
+        # Verify malware-specific recommendations
+        assert any("isolate" in action.lower() for action in recommendations["immediate_actions"])
+        assert any("snapshot" in action.lower() or "forensic" in action.lower() 
+                  for action in recommendations["immediate_actions"])
+        assert any("scan" in step.lower() for step in recommendations["investigation_steps"])
+        
+        print(f"\nMalware infection: {len(recommendations['immediate_actions'])} immediate containment actions")
+    
+    def test_real_prioritize_recommendations(self, engine: RecommendationEngine) -> None:
+        """Test REAL recommendation prioritization logic."""
+        recommendations = [
+            {
+                "action": "Block attacker IP",
+                "impact": "high",
+                "effort": "low",
+                "risk": "low",
+                "category": "immediate"
+            },
+            {
+                "action": "Reset all user passwords",
+                "impact": "high",
+                "effort": "high",
+                "risk": "high",
+                "category": "immediate"
+            },
+            {
+                "action": "Enable MFA",
+                "impact": "high",
+                "effort": "medium",
+                "risk": "low",
+                "category": "preventive"
+            },
+            {
+                "action": "Review logs",
+                "impact": "medium",
+                "effort": "low",
+                "risk": "low",
+                "category": "investigation"
+            }
+        ]
+        
+        # Prioritize recommendations
+        prioritized = engine.prioritize_recommendations(recommendations)
+        
+        # Verify prioritization
+        assert len(prioritized) == len(recommendations)
+        # High impact, low effort, low risk should be first
+        assert prioritized[0]["action"] == "Block attacker IP"
+        # Each recommendation should have a priority score
+        assert all("priority_score" in rec for rec in prioritized)
+        # Scores should be in descending order
+        scores = [rec["priority_score"] for rec in prioritized]
+        assert scores == sorted(scores, reverse=True)
+        
+        print(f"\nPrioritized {len(prioritized)} recommendations")
+        for i, rec in enumerate(prioritized[:3]):
+            print(f"  {i+1}. {rec['action']} (score: {rec['priority_score']})")
+    
+    def test_real_generate_recommendations_unknown_incident_type(self, engine: RecommendationEngine) -> None:
+        """Test REAL recommendation generation for unknown incident types."""
+        incident_analysis = {
+            "incident_type": "custom_threat_xyz",  # Unknown type
+            "severity": SeverityLevel.MEDIUM,
+            "attack_patterns": ["unknown_pattern"],
+            "affected_resources": [
+                {"type": "unknown_resource", "id": "res-001", "name": "mystery-resource"}
+            ]
+        }
+        
+        # Should generate generic recommendations
+        recommendations = engine.generate_recommendations(incident_analysis)
+        
+        # Verify generic recommendations are provided
+        assert isinstance(recommendations, dict)
+        assert len(recommendations["immediate_actions"]) > 0
+        assert len(recommendations["investigation_steps"]) > 0
+        assert recommendations["priority"] == "medium"
+        
+        # Generic recommendations should include basic actions
+        all_actions = (recommendations["immediate_actions"] + 
+                      recommendations["investigation_steps"] + 
+                      recommendations.get("preventive_measures", []))
+        assert any("isolate" in action.lower() or "investigate" in action.lower() 
+                  for action in all_actions)
+        
+        print(f"\nGeneric recommendations generated for unknown incident type")
+    
+    def test_real_enrich_recommendations_with_context(self, engine: RecommendationEngine) -> None:
+        """Test REAL recommendation enrichment with contextual information."""
+        base_recommendations = {
+            "immediate_actions": [
+                "Disable the compromised user account immediately",
+                "Block source IP addresses"
+            ],
+            "investigation_steps": [
+                "Review authentication logs"
+            ],
+            "priority": "high"
+        }
+        
+        context = {
+            "environment": "production",
+            "business_impact": "high",
+            "affected_users": 150,
+            "geographic_scope": "global",
+            "compliance_requirements": ["GDPR", "SOC2"]
+        }
+        
+        # Enrich recommendations with context
+        enriched = engine.enrich_recommendations(base_recommendations, context)
+        
+        # Verify enrichment
+        assert "context_considerations" in enriched
+        assert "compliance_actions" in enriched
+        assert len(enriched["immediate_actions"]) >= len(base_recommendations["immediate_actions"])
+        
+        # Production environment should add urgency
+        assert enriched.get("urgency") == "critical" or enriched["priority"] == "critical"
+        
+        # Compliance should add specific actions
+        assert any("gdpr" in action.lower() or "notification" in action.lower() 
+                  for action in enriched.get("compliance_actions", []))
+        
+        print(f"\nEnriched recommendations with {len(context)} context factors")
+    
+    def test_real_calculate_priority_score(self, engine: RecommendationEngine) -> None:
+        """Test REAL priority score calculation."""
+        # Test various recommendation scenarios
+        test_cases = [
+            {
+                "impact": "high",
+                "effort": "low", 
+                "risk": "low",
+                "expected_score_min": 80  # High impact, easy to implement
+            },
+            {
+                "impact": "low",
+                "effort": "high",
+                "risk": "high", 
+                "expected_score_max": 30  # Low impact, hard and risky
+            },
+            {
+                "impact": "medium",
+                "effort": "medium",
+                "risk": "medium",
+                "expected_score_range": (40, 60)  # Balanced
+            }
+        ]
+        
+        for case in test_cases:
+            score = engine._calculate_priority_score(
+                impact=case["impact"],
+                effort=case["effort"],
+                risk=case["risk"]
+            )
+            
+            assert isinstance(score, (int, float))
+            assert 0 <= score <= 100
+            
+            if "expected_score_min" in case:
+                assert score >= case["expected_score_min"]
+            elif "expected_score_max" in case:
+                assert score <= case["expected_score_max"]
+            elif "expected_score_range" in case:
+                assert case["expected_score_range"][0] <= score <= case["expected_score_range"][1]
+        
+        print(f"\nPriority scoring tested for {len(test_cases)} scenarios")
+    
+    def test_real_filter_recommendations_by_capability(self, engine: RecommendationEngine) -> None:
+        """Test REAL filtering of recommendations based on available capabilities."""
+        all_recommendations = {
+            "immediate_actions": [
+                "Block IP at firewall",
+                "Disable user account",
+                "Isolate VM instance",
+                "Enable Cloud Armor",
+                "Activate DDoS protection"
+            ],
+            "investigation_steps": [
+                "Review Cloud Logging",
+                "Analyze with Chronicle",
+                "Check Security Command Center"
+            ]
+        }
+        
+        available_capabilities = {
+            "firewall_management": True,
+            "iam_management": True,
+            "compute_management": False,  # Can't isolate VMs
+            "cloud_armor": False,  # Not available
+            "logging": True,
+            "chronicle": False  # Not licensed
+        }
+        
+        # Filter based on capabilities
+        filtered = engine.filter_recommendations_by_capability(
+            all_recommendations, 
+            available_capabilities
+        )
+        
+        # Verify filtering
+        assert "Block IP at firewall" in filtered["immediate_actions"]
+        assert "Disable user account" in filtered["immediate_actions"]
+        assert "Isolate VM instance" not in filtered["immediate_actions"]
+        assert "Enable Cloud Armor" not in filtered["immediate_actions"]
+        assert "Review Cloud Logging" in filtered["investigation_steps"]
+        assert "Analyze with Chronicle" not in filtered["investigation_steps"]
+        
+        print(f"\nFiltered recommendations based on {len(available_capabilities)} capabilities")

@@ -1,0 +1,306 @@
+# SentinelOps Configuration File
+
+# Google Cloud Configuration
+google_cloud:
+  # Project ID for all Google Cloud resources
+  project_id: "your-gcp-project-id"
+
+  # Default region for resources
+  region: "us-central1"
+
+  # BigQuery configuration
+  bigquery:
+    dataset: "sentinelops_data"
+    tables:
+      events: "security_events"
+      incidents: "incidents"
+      analysis_results: "analysis_results"
+      remediation_actions: "remediation_actions"
+      notifications: "notifications"
+
+  # Pub/Sub topic names
+  pubsub:
+    topics:
+      detection_events: "detection-events"
+      analysis_requests: "analysis-requests"
+      analysis_results: "analysis-results"
+      remediation_requests: "remediation-requests"
+      remediation_results: "remediation-results"
+      notifications: "notifications"
+      orchestration_commands: "orchestration-commands"
+
+    subscriptions:
+      detection_to_orchestrator: "detection-events-orchestrator-sub"
+      orchestrator_to_analysis: "analysis-requests-sub"
+      analysis_to_orchestrator: "analysis-results-orchestrator-sub"
+      orchestrator_to_remediation: "remediation-requests-sub"
+      remediation_to_orchestrator: "remediation-results-orchestrator-sub"
+      orchestrator_to_communication: "notifications-sub"
+
+  # Gemini API configuration
+  gemini:
+    endpoint: "us-central1-aiplatform.googleapis.com"
+    model: "gemini-pro"
+    location: "us-central1"
+    temperature: 0.7
+    max_output_tokens: 2048
+    top_k: 40
+    top_p: 0.95
+    
+    # Connection pooling
+    connection_pool_size: 5
+    max_workers: 10
+    
+    # Rate limiting
+    requests_per_minute: 60
+    requests_per_hour: 1000
+    tokens_per_minute: 60000
+    tokens_per_hour: 1000000
+    
+    # Model warm-up
+    warm_up_on_start: true
+    warm_up_models:
+      - "gemini-pro"
+      - "gemini-1.5-pro"
+      - "gemini-1.5-flash"
+    
+    # Caching
+    enable_response_cache: true
+    cache_ttl_minutes: 15
+    enable_embedding_cache: true
+    embedding_cache_size: 10000
+    
+    # Safety settings
+    safety_settings:
+      HARM_CATEGORY_HARASSMENT: "BLOCK_MEDIUM_AND_ABOVE"
+      HARM_CATEGORY_HATE_SPEECH: "BLOCK_MEDIUM_AND_ABOVE"
+      HARM_CATEGORY_SEXUALLY_EXPLICIT: "BLOCK_MEDIUM_AND_ABOVE"
+      HARM_CATEGORY_DANGEROUS_CONTENT: "BLOCK_MEDIUM_AND_ABOVE"
+
+# Agent Configuration
+agents:
+  # Detection Agent Settings
+  detection:
+    # Polling intervals in seconds
+    polling_interval: 60
+
+    # Log sources to monitor
+    log_sources:
+      - type: "cloud_logging"
+        filter: 'severity >= "WARNING"'
+      - type: "compute_engine"
+        monitor_types: ["instance", "firewall", "network"]
+
+    # Detection rules
+    severity_thresholds:
+      critical: ["unauthorized_access", "data_exfiltration", "malware_detected"]
+      high: ["suspicious_login", "privilege_escalation", "policy_violation"]
+      medium: ["failed_login_attempts", "configuration_change", "unusual_traffic"]
+      low: ["user_activity", "system_update", "scheduled_task"]
+
+    # Batch processing
+    batch_size: 100
+    batch_timeout: 30
+
+  # Analysis Agent Settings
+  analysis:
+    # Analysis timeout in seconds
+    timeout: 300
+
+    # Confidence score thresholds
+    confidence_thresholds:
+      high_confidence: 0.8
+      medium_confidence: 0.6
+      low_confidence: 0.4
+
+    # Gemini integration
+    use_gemini: true
+    use_structured_prompts: true  # Use structured prompts for better analysis
+    gemini_analysis_prompts:
+      security_assessment: "Analyze this security event and provide a detailed assessment including potential impact, attack vectors, and recommended actions."
+      threat_classification: "Classify this security threat according to MITRE ATT&CK framework and explain the attack chain."
+      remediation_suggestions: "Suggest specific remediation actions for this security incident, prioritized by effectiveness and urgency."
+
+    # Correlation settings
+    correlation_window: 3600  # 1 hour in seconds
+    max_related_events: 50
+    
+    # Batch processing
+    enable_batch_processing: true
+    batch_size: 10
+    batch_timeout: 600  # 10 minutes for batch operations
+
+  # Remediation Agent Settings
+  remediation:
+    # Remediation policies
+    auto_remediation:
+      enabled: false  # Requires manual approval by default
+      allowed_actions:
+        - "isolate_instance"
+        - "revoke_iam_permissions"
+        - "block_ip_address"
+        - "disable_user_account"
+
+    # Action timeout in seconds
+    action_timeout: 120
+
+    # Retry configuration
+    max_retries: 3
+    retry_delay: 10
+
+    # Safety checks
+    require_approval_for:
+      - "delete_resource"
+      - "modify_production_config"
+      - "change_firewall_rules"
+
+    # Rollback configuration
+    enable_rollback: true
+    rollback_timeout: 300
+
+  # Communication Agent Settings
+  communication:
+    # Notification channels
+    channels:
+      email:
+        enabled: true
+        smtp_host: "smtp.gmail.com"
+        smtp_port: 587
+        from_address: "sentinelops@example.com"
+
+      slack:
+        enabled: false
+        webhook_url: ""
+        default_channel: "#security-alerts"
+
+      pagerduty:
+        enabled: false
+        integration_key: ""
+
+    # Notification rules
+    severity_notifications:
+      critical:
+        channels: ["email", "slack", "pagerduty"]
+        recipients: ["security-team@example.com"]
+        escalation_time: 300  # 5 minutes
+      high:
+        channels: ["email", "slack"]
+        recipients: ["security-team@example.com"]
+        escalation_time: 900  # 15 minutes
+      medium:
+        channels: ["email"]
+        recipients: ["security-team@example.com"]
+        escalation_time: 3600  # 1 hour
+      low:
+        channels: ["email"]
+        recipients: ["security-monitoring@example.com"]
+        escalation_time: 86400  # 24 hours
+
+    # Template settings
+    use_templates: true
+    template_directory: "templates/notifications"
+
+  # Orchestration Agent Settings
+  orchestrator:
+    # Workflow configuration
+    workflow_timeout: 1800  # 30 minutes
+
+    # Decision policies
+    auto_escalate:
+      enabled: true
+      conditions:
+        - severity: "critical"
+          confidence_threshold: 0.8
+        - severity: "high"
+          confidence_threshold: 0.9
+
+    # Coordination settings
+    parallel_processing: true
+    max_concurrent_incidents: 10
+
+    # State management
+    state_persistence:
+      enabled: true
+      backend: "firestore"
+      collection: "orchestrator_state"
+
+    # Health monitoring
+    health_check_interval: 60
+    agent_timeout: 300
+
+# Development Settings
+development:
+  # Debug flags
+  debug: true
+  verbose_logging: true
+
+  # Test mode settings
+  test_mode: false
+  dry_run: false  # If true, no actual remediation actions are executed
+
+  # Local development overrides
+  use_local_pubsub_emulator: false
+  pubsub_emulator_host: "localhost:8085"
+
+  # Mock external services
+  mock_gemini: false
+  mock_gcp_apis: false
+
+  # Performance profiling
+  enable_profiling: false
+  profile_output_dir: "profiles/"
+
+# Security Settings
+security:
+  # Authentication
+  require_authentication: true
+  auth_method: "google_oauth"
+
+  # Encryption
+  encrypt_sensitive_data: true
+  encryption_key_location: "projects/{project_id}/locations/global/keyRings/sentinelops/cryptoKeys/data-key"
+
+  # Audit logging
+  audit_logging:
+    enabled: true
+    log_all_actions: true
+    retention_days: 90
+
+# Performance Settings
+performance:
+  # Resource limits
+  max_memory_mb: 2048
+  max_cpu_percentage: 80
+
+  # Caching
+  enable_caching: true
+  cache_ttl: 3600
+
+  # Connection pooling
+  connection_pool_size: 10
+  connection_timeout: 30
+
+# Monitoring and Alerting
+monitoring:
+  # Metrics collection
+  metrics_enabled: true
+  metrics_interval: 60
+
+  # Custom metrics
+  custom_metrics:
+    - name: "incidents_processed"
+      type: "counter"
+    - name: "remediation_success_rate"
+      type: "gauge"
+    - name: "agent_response_time"
+      type: "histogram"
+
+  # Alerting thresholds
+  alerts:
+    high_error_rate:
+      threshold: 0.1  # 10% error rate
+      window: 300  # 5 minutes
+    agent_down:
+      threshold: 180  # 3 minutes without heartbeat
+    high_latency:
+      threshold: 5000  # 5 seconds

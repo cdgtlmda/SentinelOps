@@ -1,0 +1,6 @@
+# SentinelOps Resilience Testing
+# Run daily at 3 AM
+0 3 * * * /opt/sentinelops/scripts/run_resilience_tests.sh
+
+# Run after any deployment
+@reboot /opt/sentinelops/scripts/run_resilience_tests.sh

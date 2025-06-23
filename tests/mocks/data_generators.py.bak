@@ -1,0 +1,48 @@
+"""
+Mock data generators for testing.
+
+Provides generators for various types of test data used in SentinelOps.
+"""
+
+import random
+import uuid
+from datetime import datetime, timedelta
+from typing import Dict, List, Any, Optional
+
+
+class LogEntryGenerator:
+    """Generate mock log entries for testing."""
+
+    LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+    LOG_SOURCES = ["compute.googleapis.com", "storage.googleapis.com", "bigquery.googleapis.com"]
+
+    @staticmethod
+    def generate_log_entry(
+        severity: Optional[str] = None,
+        source: Optional[str] = None,
+        timestamp: Optional[datetime] = None,
+        **kwargs: Any
+    ) -> Dict[str, Any]:
+        """Generate a mock log entry."""
+        if severity is None:
+            severity = random.choice(LogEntryGenerator.LOG_LEVELS)
+        if source is None:
+            source = random.choice(LogEntryGenerator.LOG_SOURCES)
+        if timestamp is None:
+            timestamp = datetime.now() - timedelta(minutes=random.randint(0, 60))
+
+        log_entry = {
+            "insertId": f"log-{uuid.uuid4()}",
+            "timestamp": timestamp.isoformat(),
+            "severity": severity,
+            "logName": f"projects/test-project/logs/{source}",
+            "resource": {
+                "type": source.split('.')[0],
+                "labels": {
+                    "project_id": "test-project",
+                    "zone": "us-central1-a"
+                }
+            },
+            "jsonPayload": {
+                "message": f"Test {severity.lower()} message",
+                "requestId": str(uuid.uuid4()),

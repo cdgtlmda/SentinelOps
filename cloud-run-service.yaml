@@ -1,0 +1,56 @@
+# Cloud Run Service Configuration
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: sentinelops-api
+  annotations:
+    run.googleapis.com/launch-stage: BETA
+spec:
+  template:
+    metadata:
+      annotations:
+        # Limits and scaling
+        run.googleapis.com/execution-environment: gen2
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "10"
+        run.googleapis.com/cpu-throttling: "false"
+
+    spec:
+      # Container configuration
+      containers:
+      - image: us-central1-docker.pkg.dev/PROJECT_ID/sentinelops/sentinelops:latest
+        ports:
+        - containerPort: 8080
+
+        # Resource limits
+        resources:
+          limits:
+            cpu: "2"
+            memory: "2Gi"
+          requests:
+            cpu: "1"
+            memory: "1Gi"
+
+        # Environment variables
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: GOOGLE_CLOUD_PROJECT
+          value: "PROJECT_ID"
+        - name: PORT
+          value: "8080"
+        - name: LOG_LEVEL
+          value: "INFO"
+
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /health
+          initialDelaySeconds: 10
+          periodSeconds: 30
+
+        readinessProbe:
+          httpGet:
+            path: /ready
+          initialDelaySeconds: 5
+          periodSeconds: 10

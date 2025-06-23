@@ -1,0 +1,86 @@
+graph TB
+    subgraph "SentinelOps System"
+        API[API Gateway]
+        Core[Core Engine]
+        Agents[Agent System]
+        Storage[Local Storage]
+    end
+    
+    subgraph "Google Cloud Platform"
+        subgraph "Data Sources"
+            CloudLogs[(Cloud Logging)]
+            SecurityCmd[(Security Command Center)]
+            AuditLogs[(Audit Logs)]
+            VPCFlow[(VPC Flow Logs)]
+            FirewallRules[(Firewall Rules)]
+        end
+        
+        subgraph "Data Processing"
+            BigQuery[(BigQuery)]
+            Dataflow[Dataflow]
+            ADKTransfer[ADK Transfer System]
+        end
+        
+        subgraph "Execution Environment"
+            CloudRun[Cloud Run]
+            CloudFunctions[Cloud Functions]
+            GCE[Compute Engine]
+        end        
+        subgraph "Security & Management"
+            IAM[Identity & Access Management]
+            SecretManager[Secret Manager]
+            KMS[Key Management Service]
+        end
+        
+        subgraph "AI & ML"
+            Gemini[Gemini API]
+            VertexAI[Vertex AI]
+        end
+    end
+    
+    %% Data Source Connections
+    CloudLogs --> BigQuery
+    SecurityCmd --> BigQuery
+    AuditLogs --> BigQuery
+    VPCFlow --> BigQuery
+    FirewallRules --> BigQuery
+    
+    %% Data Processing Flow
+    CloudLogs --> PubSub
+    PubSub --> Dataflow
+    Dataflow --> BigQuery
+    
+    %% SentinelOps to GCP Connections
+    API --> IAM
+    Core --> CloudRun
+    Agents --> CloudFunctions
+    Storage --> BigQuery    
+    %% Security Connections
+    Core --> SecretManager
+    Core --> KMS
+    Agents --> SecretManager
+    
+    %% AI Connections
+    Agents --> Gemini
+    Agents --> VertexAI
+    
+    %% Execution Environment
+    CloudRun --> IAM
+    CloudFunctions --> IAM
+    GCE --> IAM
+    
+    %% Style Classes
+    classDef sentinelops fill:#f9f,stroke:#333,stroke-width:1px;
+    classDef datasource fill:#bbf,stroke:#333,stroke-width:1px;
+    classDef processing fill:#bfb,stroke:#333,stroke-width:1px;
+    classDef execution fill:#fbf,stroke:#333,stroke-width:1px;
+    classDef security fill:#fdb,stroke:#333,stroke-width:1px;
+    classDef ai fill:#bff,stroke:#333,stroke-width:1px;
+    
+    %% Apply Styles
+    class API,Core,Agents,Storage sentinelops;
+    class CloudLogs,SecurityCmd,AuditLogs,VPCFlow,FirewallRules datasource;
+    class BigQuery,Dataflow,PubSub processing;
+    class CloudRun,CloudFunctions,GCE execution;
+    class IAM,SecretManager,KMS security;
+    class Gemini,VertexAI ai;

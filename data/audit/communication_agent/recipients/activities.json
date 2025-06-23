@@ -1,0 +1,121 @@
+{
+  "sec@example.com": {
+    "email": null,
+    "slack_id": null,
+    "phone_number": null,
+    "total_notifications": 7,
+    "successful_deliveries": 7,
+    "failed_deliveries": 0,
+    "last_notification": "2025-06-06T04:13:55.632335",
+    "channels_used": [
+      "email"
+    ],
+    "notification_types": {
+      "incident_detected": 7
+    },
+    "average_read_time_hours": null,
+    "preferences_updated": null
+  },
+  "#test-alerts": {
+    "email": null,
+    "slack_id": null,
+    "phone_number": null,
+    "total_notifications": 7,
+    "successful_deliveries": 6,
+    "failed_deliveries": 1,
+    "last_notification": "2025-06-08T02:52:54.603126+00:00",
+    "channels_used": [
+      "slack"
+    ],
+    "notification_types": {
+      "incident_detected": 7
+    },
+    "average_read_time_hours": null,
+    "preferences_updated": null
+  },
+  "security@example.com": {
+    "email": null,
+    "slack_id": null,
+    "phone_number": null,
+    "total_notifications": 13,
+    "successful_deliveries": 12,
+    "failed_deliveries": 1,
+    "last_notification": "2025-06-08T02:52:55.614868+00:00",
+    "channels_used": [
+      "email"
+    ],
+    "notification_types": {
+      "incident_detected": 13
+    },
+    "average_read_time_hours": null,
+    "preferences_updated": null
+  },
+  "#security-alerts": {
+    "email": null,
+    "slack_id": null,
+    "phone_number": null,
+    "total_notifications": 24,
+    "successful_deliveries": 24,
+    "failed_deliveries": 0,
+    "last_notification": "2025-06-08T02:52:56.624993+00:00",
+    "channels_used": [
+      "slack"
+    ],
+    "notification_types": {
+      "incident_detected": 24
+    },
+    "average_read_time_hours": null,
+    "preferences_updated": null
+  },
+  "+1234567890": {
+    "email": null,
+    "slack_id": null,
+    "phone_number": null,
+    "total_notifications": 6,
+    "successful_deliveries": 6,
+    "failed_deliveries": 0,
+    "last_notification": "2025-06-08T02:52:55.615355+00:00",
+    "channels_used": [
+      "sms"
+    ],
+    "notification_types": {
+      "incident_detected": 6
+    },
+    "average_read_time_hours": null,
+    "preferences_updated": null
+  },
+  "#critical-alerts": {
+    "email": null,
+    "slack_id": null,
+    "phone_number": null,
+    "total_notifications": 4,
+    "successful_deliveries": 4,
+    "failed_deliveries": 0,
+    "last_notification": "2025-06-08T02:52:56.118737+00:00",
+    "channels_used": [
+      "slack"
+    ],
+    "notification_types": {
+      "incident_detected": 4
+    },
+    "average_read_time_hours": null,
+    "preferences_updated": null
+  },
+  "oncall@example.com": {
+    "email": null,
+    "slack_id": null,
+    "phone_number": null,
+    "total_notifications": 4,
+    "successful_deliveries": 4,
+    "failed_deliveries": 0,
+    "last_notification": "2025-06-08T02:52:56.119535+00:00",
+    "channels_used": [
+      "email"
+    ],
+    "notification_types": {
+      "incident_detected": 4
+    },
+    "average_read_time_hours": null,
+    "preferences_updated": null
+  }
+}

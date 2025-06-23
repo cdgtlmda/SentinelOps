@@ -1,0 +1,83 @@
+{
+  "project_id": "your-gcp-project-id",
+  "environment": "dev",
+  "region": "us-central1",
+  "naming_conventions": {
+    "bigquery": {
+      "dataset": "{application}_{environment}",
+      "table": "{dataset}.{resource_type}_{purpose}",
+      "view": "{dataset}.view_{purpose}"
+    },
+    "pubsub": {
+      "topic": "{purpose}-{resource_type}",
+      "subscription": "{topic}-sub-{consumer}"
+    },
+    "cloud_run": {
+      "service": "{application}-{component}-{environment}"
+    },
+    "cloud_functions": {
+      "function": "{application}-{action}-{resource_type}"
+    },
+    "storage": {
+      "bucket": "{application}-{project_id}-{purpose}-{environment}"
+    },
+    "firestore": {
+      "database": "{application}-{environment}",
+      "collection": "{resource_type}_{purpose}"
+    },
+    "compute": {
+      "instance": "{application}-{purpose}-{environment}-{index}",
+      "instance_template": "{application}-{purpose}-template-{version}",
+      "instance_group": "{application}-{purpose}-ig-{environment}"
+    },
+    "network": {
+      "vpc": "{application}-vpc-{environment}",
+      "subnet": "{vpc}-subnet-{region}-{purpose}",
+      "firewall": "{application}-fw-{direction}-{purpose}"
+    },
+    "iam": {
+      "service_account": "{application}-{purpose}-sa",
+      "custom_role": "{application}.{resource_type}.{permission_level}"
+    },
+    "secret_manager": {
+      "secret": "{application}_{environment}_{secret_type}"
+    }
+  },
+  "resource_tags": {
+    "required": [
+      "environment",
+      "application",
+      "team",
+      "owner"
+    ],
+    "optional": [
+      "cost-center",
+      "data-classification",
+      "compliance",
+      "tier"
+    ]
+  },
+  "environments": {
+    "dev": {
+      "short": "dev",
+      "labels": {
+        "environment": "development",
+        "tier": "non-critical"
+      }
+    },
+    "staging": {
+      "short": "stg",
+      "labels": {
+        "environment": "staging",
+        "tier": "important"
+      }
+    },
+    "prod": {
+      "short": "prd",
+      "labels": {
+        "environment": "production",
+        "tier": "critical"
+      }
+    }
+  }
+}

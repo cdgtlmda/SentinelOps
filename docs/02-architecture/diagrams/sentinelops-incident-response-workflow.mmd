@@ -1,0 +1,87 @@
+stateDiagram-v2
+    [*] --> LogMonitoring
+    
+    state "Continuous Monitoring (Detection Agent)" as LogMonitoring {
+        [*] --> Scanning: LogMonitoringTool
+        Scanning --> RuleMatching: Log Entry
+        RuleMatching --> Scanning: No Match (RulesEngineTool)
+        RuleMatching --> SignalGeneration: Match Found
+        SignalGeneration --> EventCorrelation: AnomalyDetectionTool
+        EventCorrelation --> Scanning: Low Confidence (EventCorrelatorTool)
+        EventCorrelation --> [*]: High Confidence → TransferToOrchestratorAgentTool
+    }
+    
+    LogMonitoring --> IncidentCreation: ADK Transfer System
+    
+    state "Incident Analysis (Analysis Agent)" as IncidentAnalysis {
+        [*] --> ContextCollection: via TransferToAnalysisAgentTool
+        ContextCollection --> EventCorrelation: ContextTool
+        EventCorrelation --> RiskAssessment: CorrelationTool
+        RiskAssessment --> SeverityClassification: GeminiAnalysisTool
+        SeverityClassification --> [*]: RecommendationTool → TransferToOrchestratorAgentTool
+    }
+    
+    IncidentCreation --> IncidentAnalysis: ADK Transfer
+    
+    IncidentAnalysis --> TriageProcess    
+    state "Triage & Prioritization (Orchestrator Agent)" as TriageProcess {
+        [*] --> ImpactAssessment
+        ImpactAssessment --> UrgencyEvaluation: WorkflowManagementTool
+        UrgencyEvaluation --> ResponseSelection: FirestoreTool
+        ResponseSelection --> [*]: Select TransferToRemediationAgentTool or TransferToCommunicationAgentTool
+    }
+    
+    state "Response Action (Remediation Agent)" as ResponseAction {
+        state AutomatedResponse {
+            [*] --> ActionPlanning: via TransferToRemediationAgentTool
+            ActionPlanning --> Execution: Select appropriate tool
+            Execution --> Verification: BlockIPTool/IsolateVMTool/RevokeCredentialsTool
+            Verification --> [*]: TransferToOrchestratorAgentTool
+        }
+        
+        state ManualResponse {
+            [*] --> ApprovalRequest: TransferToCommunicationAgentTool
+            ApprovalRequest --> WaitingForApproval: EmailTool/SlackTool
+            WaitingForApproval --> ActionPlanning: Approved via TransferToRemediationAgentTool
+            WaitingForApproval --> Cancelled: Denied
+            ActionPlanning --> GuidedExecution
+            GuidedExecution --> ManualVerification
+            ManualVerification --> [*]: TransferToOrchestratorAgentTool
+            Cancelled --> [*]
+        }
+        
+        [*] --> ResponseTypeSelection
+        ResponseTypeSelection --> AutomatedResponse: Automated Path
+        ResponseTypeSelection --> ManualResponse: Manual Path
+        AutomatedResponse --> [*]
+        ManualResponse --> [*]
+    }
+    
+    TriageProcess --> ResponseAction    
+    ResponseAction --> VerificationProcess: ADK Transfer
+    
+    state "Verification & Closure (Orchestrator + Communication)" as VerificationProcess {
+        [*] --> EffectivenessCheck: TransferToDetectionAgentTool
+        EffectivenessCheck --> IncidentClosure: Successful
+        EffectivenessCheck --> EscalationProcess: Failed
+        EscalationProcess --> IncidentReassessment: TransferToAnalysisAgentTool
+        IncidentReassessment --> [*]
+        IncidentClosure --> LessonsLearned: FirestoreTool
+        LessonsLearned --> RuleUpdates
+        RuleUpdates --> PlaybookUpdates
+        PlaybookUpdates --> [*]: Update tool configurations
+    }
+    
+    VerificationProcess --> [*]
+    
+    state "Communication Flow (Communication Agent)" as CommunicationFlow {
+        [*] --> InitialAlert: TransferToCommunicationAgentTool
+        InitialAlert --> StatusUpdates: SlackTool/EmailTool
+        StatusUpdates --> ResolutionNotice: TemplateRenderingTool
+        ResolutionNotice --> FinalReport
+        FinalReport --> [*]
+    }
+    
+    IncidentCreation --> CommunicationFlow: via ADK Transfer System
+    ResponseAction --> CommunicationFlow: Status Update via Transfer
+    VerificationProcess --> CommunicationFlow: Resolution via Transfer

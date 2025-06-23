@@ -1,0 +1,40 @@
+# Cloud Build configuration for building agent images
+# This builds AMD64 images directly in Google Cloud
+
+steps:
+  # Build Detection Agent
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/sentinelops/detection-agent:latest', '-f', 'agents/detection/Dockerfile', '.']
+    id: 'build-detection'
+
+  # Build Analysis Agent
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/sentinelops/analysis-agent:latest', '-f', 'agents/analysis/Dockerfile', '.']
+    id: 'build-analysis'
+
+  # Build Remediation Agent
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/sentinelops/remediation-agent:latest', '-f', 'agents/remediation/Dockerfile', '.']
+    id: 'build-remediation'
+
+  # Build Communication Agent
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/sentinelops/communication-agent:latest', '-f', 'agents/communication/Dockerfile', '.']
+    id: 'build-communication'
+
+  # Build Orchestrator Agent
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/sentinelops/orchestrator-agent:latest', '-f', 'agents/orchestrator/Dockerfile', '.']
+    id: 'build-orchestrator'
+
+# Push all images
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/sentinelops/detection-agent:latest'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/sentinelops/analysis-agent:latest'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/sentinelops/remediation-agent:latest'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/sentinelops/communication-agent:latest'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/sentinelops/orchestrator-agent:latest'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+timeout: '1200s'

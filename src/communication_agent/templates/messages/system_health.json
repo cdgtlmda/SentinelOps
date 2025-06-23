@@ -1,0 +1,8 @@
+{
+  "system_health": {
+    "subject": "💚 System Health Report - {timestamp}",
+    "body": "SentinelOps system health report.\n\n**Overall Status**: {overall_status}\n\n**Component Status:**\n- Detection Agent: {detection_status}\n- Analysis Agent: {analysis_status}\n- Remediation Agent: {remediation_status}\n- Communication Agent: {communication_status}\n- Orchestrator: {orchestrator_status}\n\n**Performance Metrics:**\n- API Latency (p95): {api_latency}ms\n- Queue Size: {queue_size}\n- CPU Usage: {cpu_usage}%\n- Memory Usage: {memory_usage}%\n\n**Recent Issues:**\n{recent_issues}\n\n**Scheduled Maintenance:**\n{maintenance_items}\n\n**Recommendations:**\n{health_recommendations}\n\n**Dashboard**: {health_dashboard_link}",
+    "short": "System health: {overall_status}",
+    "required_fields": ["timestamp", "overall_status", "detection_status", "analysis_status", "remediation_status", "communication_status"]
+  }
+}

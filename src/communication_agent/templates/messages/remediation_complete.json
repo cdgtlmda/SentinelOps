@@ -1,0 +1,9 @@
+{
+  "remediation_complete": {
+    "subject": "✅ Remediation Complete: {incident_id}",
+    "body": "Remediation has been successfully completed for incident {incident_id}.\n\n**Completion Summary:**\n- **Status**: {status}\n- **Duration**: {duration}\n- **Actions Taken**: {actions_taken}\n- **Resources Modified**: {resources_modified}\n\n**Verification Results:**\n{verification_results}\n\n**Post-Remediation Status:**\n{post_remediation_status}\n\nIncident {incident_id} has been resolved.",
+    "short": "Remediation complete for {incident_id}: {status}",
+    "sms": "Remediation complete for {incident_id}. Status: {status}. Incident resolved.",
+    "required_fields": ["incident_id", "status", "duration", "actions_taken", "verification_results"]
+  }
+}

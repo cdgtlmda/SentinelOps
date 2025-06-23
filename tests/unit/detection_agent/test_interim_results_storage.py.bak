@@ -1,0 +1,687 @@
+"""
+Comprehensive tests for InterimResultsStorage and InterimResult.
+
+Tests the interim results storage functionality for the Detection Agent,
+including storage operations, expiration handling, and filtering.
+
+NO MOCKING - All tests use real implementation and production code.
+COVERAGE REQUIREMENT: ≥90% statement coverage of interim_results_storage.py
+VERIFICATION: python -m coverage run -m pytest tests/unit/detection_agent/test_interim_results_storage.py && python -m coverage report --include="*interim_results_storage.py" --show-missing
+"""
+
+import tempfile
+import pytest
+import os
+import json
+from datetime import datetime, timedelta
+from pathlib import Path
+
+# Import the actual production code - NO MOCKS
+from src.detection_agent.interim_results_storage import InterimResult, InterimResultsStorage
+
+
+class TestInterimResult:
+    """Test InterimResult dataclass with real implementation."""
+
+    def test_interim_result_creation(self):
+        """Test InterimResult dataclass creation."""
+        created_at = datetime.now()
+        expires_at = created_at + timedelta(hours=24)
+        
+        result = InterimResult(
+            result_id="test-123",
+            rule_type="threshold",
+            stage="initial_scan",
+            data={"count": 10, "threshold": 5},
+            metadata={"rule_name": "test_rule", "source": "logs"},
+            created_at=created_at,
+            expires_at=expires_at
+        )
+        
+        assert result.result_id == "test-123"
+        assert result.rule_type == "threshold"
+        assert result.stage == "initial_scan"
+        assert result.data == {"count": 10, "threshold": 5}
+        assert result.metadata == {"rule_name": "test_rule", "source": "logs"}
+        assert result.created_at == created_at
+        assert result.expires_at == expires_at
+
+    def test_interim_result_minimal(self):
+        """Test InterimResult with minimal required fields."""
+        result = InterimResult(
+            result_id="minimal",
+            rule_type="simple",
+            stage="test",
+            data=None,
+            metadata={},
+            created_at=datetime.now(),
+            expires_at=datetime.now() + timedelta(hours=1)
+        )
+        
+        assert result.result_id == "minimal"
+        assert result.data is None
+        assert result.metadata == {}
+
+    def test_interim_result_complex_data(self):
+        """Test InterimResult with complex data structures."""
+        complex_data = {
+            "query_results": [
+                {"timestamp": "2025-06-14T10:00:00Z", "count": 5},
+                {"timestamp": "2025-06-14T11:00:00Z", "count": 8}
+            ],
+            "aggregations": {
+                "total": 13,
+                "average": 6.5,
+                "max": 8
+            },
+            "filters": ["severity>HIGH", "source=security_logs"]
+        }
+        
+        result = InterimResult(
+            result_id="complex-data",
+            rule_type="correlation",
+            stage="aggregation",
+            data=complex_data,
+            metadata={"processing_time": 1.23, "sources": ["log1", "log2"]},
+            created_at=datetime.now(),
+            expires_at=datetime.now() + timedelta(hours=6)
+        )
+        
+        assert result.data["aggregations"]["total"] == 13
+        assert len(result.data["query_results"]) == 2
+        assert result.metadata["processing_time"] == 1.23
+
+
+class TestInterimResultsStorage:
+    """Comprehensive tests for InterimResultsStorage class with real implementation."""
+
+    @pytest.fixture
+    def temp_storage_dir(self):
+        """Create temporary storage directory."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            yield temp_dir
+
+    def test_init_default_config(self):
+        """Test initialization with default configuration."""
+        storage = InterimResultsStorage({})
+        
+        assert storage.enabled is True
+        assert storage.max_results == 10000
+        assert storage.default_ttl_hours == 24
+        assert storage._storage == {}
+        assert "interim" in str(storage.storage_path)
+
+    def test_init_custom_config(self, temp_storage_dir):
+        """Test initialization with custom configuration."""
+        config = {
+            "agents": {
+                "detection": {
+                    "interim_storage": {
+                        "enabled": False,
+                        "max_results": 5000,
+                        "default_ttl_hours": 12,
+                        "storage_path": temp_storage_dir
+                    }
+                }
+            }
+        }
+        
+        storage = InterimResultsStorage(config)
+        
+        assert storage.enabled is False
+        assert storage.max_results == 5000
+        assert storage.default_ttl_hours == 12
+        assert str(storage.storage_path) == temp_storage_dir
+
+    def test_init_partial_config(self):
+        """Test initialization with partial configuration."""
+        config = {
+            "agents": {
+                "detection": {
+                    "interim_storage": {
+                        "max_results": 2000
+                    }
+                }
+            }
+        }
+        
+        storage = InterimResultsStorage(config)
+        
+        assert storage.enabled is True  # Default
+        assert storage.max_results == 2000  # Custom
+        assert storage.default_ttl_hours == 24  # Default
+
+    def test_storage_disabled(self):
+        """Test storage behavior when disabled."""
+        config = {
+            "agents": {
+                "detection": {
+                    "interim_storage": {
+                        "enabled": False
+                    }
+                }
+            }
+        }
+        
+        storage = InterimResultsStorage(config)
+        
+        # Should not store when disabled
+        result = InterimResult(
+            result_id="disabled-test",
+            rule_type="test",
+            stage="test",
+            data={"test": "data"},
+            metadata={},
+            created_at=datetime.now(),
+            expires_at=datetime.now() + timedelta(hours=1)
+        )
+        
+        storage.store_result(result)
+        
+        # Should not be stored
+        assert len(storage._storage) == 0
+        assert storage.get_result("disabled-test") is None
+
+    def test_store_and_retrieve_result(self):
+        """Test storing and retrieving a result."""
+        storage = InterimResultsStorage({})
+        
+        result = InterimResult(
+            result_id="store-test",
+            rule_type="threshold",
+            stage="initial",
+            data={"count": 15},
+            metadata={"rule": "test_rule"},
+            created_at=datetime.now(),
+            expires_at=datetime.now() + timedelta(hours=2)
+        )
+        
+        # Store result
+        storage.store_result(result)
+        
+        # Retrieve result
+        retrieved = storage.get_result("store-test")
+        
+        assert retrieved is not None
+        assert retrieved.result_id == "store-test"
+        assert retrieved.rule_type == "threshold"
+        assert retrieved.data == {"count": 15}
+        assert retrieved.metadata == {"rule": "test_rule"}
+
+    def test_store_result_overwrite(self):
+        """Test storing a result with same ID overwrites previous."""
+        storage = InterimResultsStorage({})
+        
+        # Store first result
+        result1 = InterimResult(
+            result_id="overwrite-test",
+            rule_type="threshold",
+            stage="initial",
+            data={"count": 10},
+            metadata={},
+            created_at=datetime.now(),
+            expires_at=datetime.now() + timedelta(hours=1)
+        )
+        storage.store_result(result1)
+        
+        # Store second result with same ID
+        result2 = InterimResult(
+            result_id="overwrite-test",
+            rule_type="correlation",
+            stage="final",
+            data={"count": 20},
+            metadata={"updated": True},
+            created_at=datetime.now(),
+            expires_at=datetime.now() + timedelta(hours=1)
+        )
+        storage.store_result(result2)
+        
+        # Should have the second result
+        retrieved = storage.get_result("overwrite-test")
+        assert retrieved.rule_type == "correlation"
+        assert retrieved.stage == "final"
+        assert retrieved.data == {"count": 20}
+        assert retrieved.metadata == {"updated": True}
+
+    def test_get_nonexistent_result(self):
+        """Test retrieving a nonexistent result."""
+        storage = InterimResultsStorage({})
+        
+        result = storage.get_result("nonexistent")
+        
+        assert result is None
+
+    def test_delete_result(self):
+        """Test deleting a result."""
+        storage = InterimResultsStorage({})
+        
+        # Store a result
+        result = InterimResult(
+            result_id="delete-test",
+            rule_type="test",
+            stage="test",
+            data={},
+            metadata={},
+            created_at=datetime.now(),
+            expires_at=datetime.now() + timedelta(hours=1)
+        )
+        storage.store_result(result)
+        
+        # Verify it exists
+        assert storage.get_result("delete-test") is not None
+        
+        # Delete it
+        deleted = storage.delete_result("delete-test")
+        
+        assert deleted is True
+        assert storage.get_result("delete-test") is None
+
+    def test_delete_nonexistent_result(self):
+        """Test deleting a nonexistent result."""
+        storage = InterimResultsStorage({})
+        
+        deleted = storage.delete_result("nonexistent")
+        
+        assert deleted is False
+
+    def test_list_results_empty(self):
+        """Test listing results when storage is empty."""
+        storage = InterimResultsStorage({})
+        
+        results = storage.list_results()
+        
+        assert results == []
+
+    def test_list_results_with_data(self):
+        """Test listing results with stored data."""
+        storage = InterimResultsStorage({})
+        
+        # Store multiple results
+        for i in range(3):
+            result = InterimResult(
+                result_id=f"list-test-{i}",
+                rule_type="test",
+                stage="test",
+                data={"index": i},
+                metadata={},
+                created_at=datetime.now(),
+                expires_at=datetime.now() + timedelta(hours=1)
+            )
+            storage.store_result(result)
+        
+        results = storage.list_results()
+        
+        assert len(results) == 3
+        result_ids = [r.result_id for r in results]
+        assert "list-test-0" in result_ids
+        assert "list-test-1" in result_ids
+        assert "list-test-2" in result_ids
+
+    def test_list_results_by_rule_type(self):
+        """Test listing results filtered by rule type."""
+        storage = InterimResultsStorage({})
+        
+        # Store results with different rule types
+        for rule_type in ["threshold", "correlation", "threshold"]:
+            result = InterimResult(
+                result_id=f"rule-{rule_type}-{datetime.now().timestamp()}",
+                rule_type=rule_type,
+                stage="test",
+                data={},
+                metadata={},
+                created_at=datetime.now(),
+                expires_at=datetime.now() + timedelta(hours=1)
+            )
+            storage.store_result(result)
+        
+        # Filter by threshold
+        threshold_results = storage.list_results(rule_type="threshold")
+        assert len(threshold_results) == 2
+        for result in threshold_results:
+            assert result.rule_type == "threshold"
+        
+        # Filter by correlation
+        correlation_results = storage.list_results(rule_type="correlation")
+        assert len(correlation_results) == 1
+        assert correlation_results[0].rule_type == "correlation"
+
+    def test_list_results_by_stage(self):
+        """Test listing results filtered by stage."""
+        storage = InterimResultsStorage({})
+        
+        # Store results with different stages
+        stages = ["initial", "processing", "final", "initial"]
+        for i, stage in enumerate(stages):
+            result = InterimResult(
+                result_id=f"stage-{i}",
+                rule_type="test",
+                stage=stage,
+                data={},
+                metadata={},
+                created_at=datetime.now(),
+                expires_at=datetime.now() + timedelta(hours=1)
+            )
+            storage.store_result(result)
+        
+        # Filter by initial stage
+        initial_results = storage.list_results(stage="initial")
+        assert len(initial_results) == 2
+        for result in initial_results:
+            assert result.stage == "initial"
+        
+        # Filter by processing stage
+        processing_results = storage.list_results(stage="processing")
+        assert len(processing_results) == 1
+        assert processing_results[0].stage == "processing"
+
+    def test_list_results_by_multiple_filters(self):
+        """Test listing results with multiple filters."""
+        storage = InterimResultsStorage({})
+        
+        # Store results with various combinations
+        combinations = [
+            ("threshold", "initial"),
+            ("threshold", "final"),
+            ("correlation", "initial"),
+            ("correlation", "final")
+        ]
+        
+        for i, (rule_type, stage) in enumerate(combinations):
+            result = InterimResult(
+                result_id=f"multi-{i}",
+                rule_type=rule_type,
+                stage=stage,
+                data={},
+                metadata={},
+                created_at=datetime.now(),
+                expires_at=datetime.now() + timedelta(hours=1)
+            )
+            storage.store_result(result)
+        
+        # Filter by threshold + initial
+        filtered_results = storage.list_results(rule_type="threshold", stage="initial")
+        assert len(filtered_results) == 1
+        assert filtered_results[0].rule_type == "threshold"
+        assert filtered_results[0].stage == "initial"
+
+    def test_cleanup_expired_results(self):
+        """Test cleanup of expired results."""
+        storage = InterimResultsStorage({})
+        
+        now = datetime.now()
+        
+        # Store expired result
+        expired_result = InterimResult(
+            result_id="expired",
+            rule_type="test",
+            stage="test",
+            data={},
+            metadata={},
+            created_at=now - timedelta(hours=2),
+            expires_at=now - timedelta(hours=1)  # Expired 1 hour ago
+        )
+        storage.store_result(expired_result)
+        
+        # Store valid result
+        valid_result = InterimResult(
+            result_id="valid",
+            rule_type="test",
+            stage="test",
+            data={},
+            metadata={},
+            created_at=now,
+            expires_at=now + timedelta(hours=1)  # Expires in 1 hour
+        )
+        storage.store_result(valid_result)
+        
+        # Before cleanup
+        assert len(storage._storage) == 2
+        
+        # Run cleanup
+        removed_count = storage.cleanup_expired()
+        
+        # After cleanup
+        assert removed_count == 1
+        assert len(storage._storage) == 1
+        assert storage.get_result("expired") is None
+        assert storage.get_result("valid") is not None
+
+    def test_cleanup_no_expired_results(self):
+        """Test cleanup when no results are expired."""
+        storage = InterimResultsStorage({})
+        
+        # Store only valid results
+        for i in range(3):
+            result = InterimResult(
+                result_id=f"valid-{i}",
+                rule_type="test",
+                stage="test",
+                data={},
+                metadata={},
+                created_at=datetime.now(),
+                expires_at=datetime.now() + timedelta(hours=1)
+            )
+            storage.store_result(result)
+        
+        # Run cleanup
+        removed_count = storage.cleanup_expired()
+        
+        assert removed_count == 0
+        assert len(storage._storage) == 3
+
+    def test_clear_all_results(self):
+        """Test clearing all results."""
+        storage = InterimResultsStorage({})
+        
+        # Store multiple results
+        for i in range(5):
+            result = InterimResult(
+                result_id=f"clear-{i}",
+                rule_type="test",
+                stage="test",
+                data={},
+                metadata={},
+                created_at=datetime.now(),
+                expires_at=datetime.now() + timedelta(hours=1)
+            )
+            storage.store_result(result)
+        
+        # Before clear
+        assert len(storage._storage) == 5
+        
+        # Clear all
+        storage.clear_all()
+        
+        # After clear
+        assert len(storage._storage) == 0
+        assert storage.list_results() == []
+
+    def test_get_stats(self):
+        """Test getting storage statistics."""
+        storage = InterimResultsStorage({})
+        
+        # Initially empty
+        stats = storage.get_stats()
+        assert stats["total_results"] == 0
+        assert stats["by_rule_type"] == {}
+        assert stats["by_stage"] == {}
+        
+        # Add some results
+        rule_types = ["threshold", "correlation", "threshold"]
+        stages = ["initial", "processing", "final"]
+        
+        for i, (rule_type, stage) in enumerate(zip(rule_types, stages)):
+            result = InterimResult(
+                result_id=f"stats-{i}",
+                rule_type=rule_type,
+                stage=stage,
+                data={},
+                metadata={},
+                created_at=datetime.now(),
+                expires_at=datetime.now() + timedelta(hours=1)
+            )
+            storage.store_result(result)
+        
+        # Check stats
+        stats = storage.get_stats()
+        assert stats["total_results"] == 3
+        assert stats["by_rule_type"]["threshold"] == 2
+        assert stats["by_rule_type"]["correlation"] == 1
+        assert stats["by_stage"]["initial"] == 1
+        assert stats["by_stage"]["processing"] == 1
+        assert stats["by_stage"]["final"] == 1
+
+    def test_max_results_limit(self):
+        """Test max results limit enforcement."""
+        config = {
+            "agents": {
+                "detection": {
+                    "interim_storage": {
+                        "max_results": 3
+                    }
+                }
+            }
+        }
+        storage = InterimResultsStorage(config)
+        
+        # Store more than max_results
+        for i in range(5):
+            result = InterimResult(
+                result_id=f"limit-{i}",
+                rule_type="test",
+                stage="test",
+                data={},
+                metadata={},
+                created_at=datetime.now(),
+                expires_at=datetime.now() + timedelta(hours=1)
+            )
+            storage.store_result(result)
+        
+        # Should only keep max_results
+        assert len(storage._storage) <= 3
+        
+        # Should keep the most recent ones
+        results = storage.list_results()
+        result_ids = [r.result_id for r in results]
+        
+        # Should have the last 3 results
+        for i in range(2, 5):  # limit-2, limit-3, limit-4
+            assert f"limit-{i}" in result_ids
+
+    def test_persistence_save_and_load(self, temp_storage_dir):
+        """Test saving and loading results to/from disk."""
+        config = {
+            "agents": {
+                "detection": {
+                    "interim_storage": {
+                        "storage_path": temp_storage_dir
+                    }
+                }
+            }
+        }
+        storage = InterimResultsStorage(config)
+        
+        # Store some results
+        for i in range(3):
+            result = InterimResult(
+                result_id=f"persist-{i}",
+                rule_type="test",
+                stage="test",
+                data={"index": i},
+                metadata={"test": True},
+                created_at=datetime.now(),
+                expires_at=datetime.now() + timedelta(hours=1)
+            )
+            storage.store_result(result)
+        
+        # Save to disk
+        storage.save_to_disk()
+        
+        # Create new storage instance and load
+        new_storage = InterimResultsStorage(config)
+        new_storage.load_from_disk()
+        
+        # Should have loaded the results
+        loaded_results = new_storage.list_results()
+        assert len(loaded_results) == 3
+        
+        # Verify data integrity
+        for result in loaded_results:
+            assert result.rule_type == "test"
+            assert result.stage == "test"
+            assert result.metadata == {"test": True}
+
+    def test_persistence_nonexistent_file(self, temp_storage_dir):
+        """Test loading from nonexistent file."""
+        config = {
+            "agents": {
+                "detection": {
+                    "interim_storage": {
+                        "storage_path": temp_storage_dir
+                    }
+                }
+            }
+        }
+        storage = InterimResultsStorage(config)
+        
+        # Try to load from nonexistent file
+        storage.load_from_disk()
+        
+        # Should not crash and should have empty storage
+        assert len(storage._storage) == 0
+
+    def test_error_handling_invalid_data(self):
+        """Test error handling with invalid data."""
+        storage = InterimResultsStorage({})
+        
+        # Test with None result
+        storage.store_result(None)
+        assert len(storage._storage) == 0
+        
+        # Test with invalid result_id
+        try:
+            result = InterimResult(
+                result_id="",  # Empty ID
+                rule_type="test",
+                stage="test",
+                data={},
+                metadata={},
+                created_at=datetime.now(),
+                expires_at=datetime.now() + timedelta(hours=1)
+            )
+            storage.store_result(result)
+            # Should handle gracefully
+        except Exception:
+            # If validation is strict, exception is acceptable
+            pass
+
+    def test_concurrent_operations(self):
+        """Test concurrent storage operations."""
+        storage = InterimResultsStorage({})
+        
+        # Simulate concurrent stores
+        for i in range(10):
+            result = InterimResult(
+                result_id=f"concurrent-{i}",
+                rule_type="test",
+                stage="test",
+                data={"thread_id": i},
+                metadata={},
+                created_at=datetime.now(),
+                expires_at=datetime.now() + timedelta(hours=1)
+            )
+            storage.store_result(result)
+        
+        # All should be stored
+        assert len(storage._storage) == 10
+        
+        # Concurrent cleanup and list operations
+        cleanup_count = storage.cleanup_expired()
+        results = storage.list_results()
+        
+        assert cleanup_count == 0  # No expired results
+        assert len(results) == 10
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

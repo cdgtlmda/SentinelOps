@@ -1,0 +1,31 @@
+traffic_management:
+  routing_policies:
+    geo_routing:
+      enabled: true
+      rules:
+      - preferred: us-east1
+        source: US-EAST
+      - preferred: us-west1
+        source: US-WEST
+      - preferred: us-central1
+        source: US-CENTRAL
+    latency_based_routing:
+      enabled: true
+      threshold_ms: 100
+    weighted_routing:
+      default:
+        us-central1: 70
+        us-east1: 20
+        us-west1: 10
+      emergency:
+        us-central1: 33
+        us-east1: 33
+        us-west1: 34
+      failover_primary:
+        us-central1: 0
+        us-east1: 70
+        us-west1: 30
+      failover_secondary:
+        us-central1: 70
+        us-east1: 0
+        us-west1: 30

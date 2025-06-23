@@ -1,0 +1,5 @@
+{
+    "subject": "🔐 Security Policy Violation: {policy_name}",
+    "body": "A security policy violation has been detected.\n\n**Policy Details:**\n- **Policy**: {policy_name}\n- **Resource**: {resource_name}\n- **Violation Type**: {violation_type}\n- **Time**: {timestamp}\n- **User/Service**: {violator}\n\n**Violation Description:**\n{violation_description}\n\n**Risk Assessment:**\n- **Severity**: {severity}\n- **Impact**: {impact_assessment}\n- **Compliance**: {compliance_status}\n\n**Required Actions:**\n{required_actions}\n\n**Policy Documentation:** {policy_link}\n\n---\n*Policy enforcement by SentinelOps*",
+    "short": "🔐 Policy violation: {policy_name} on {resource_name} by {violator}"
+}

@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ENVIRONMENT=development
+      - GOOGLE_CLOUD_PROJECT=sentinelops-dev
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./src:/app/src
+      - ./config:/app/config
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  detection:
+    build:
+      context: ./agents/detection
+      dockerfile: Dockerfile
+    environment:
+      - ENVIRONMENT=development
+      - GOOGLE_CLOUD_PROJECT=sentinelops-dev
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./src:/app/src
+      - ./agents/detection:/app/agents/detection
+
+  analysis:
+    build:
+      context: ./agents/analysis
+      dockerfile: Dockerfile
+    environment:
+      - ENVIRONMENT=development
+      - GOOGLE_CLOUD_PROJECT=sentinelops-dev
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./src:/app/src
+      - ./agents/analysis:/app/agents/analysis
+
+  remediation:
+    build:
+      context: ./agents/remediation
+      dockerfile: Dockerfile
+    environment:
+      - ENVIRONMENT=development
+      - GOOGLE_CLOUD_PROJECT=sentinelops-dev
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./src:/app/src
+      - ./agents/remediation:/app/agents/remediation
+
+  communication:
+    build:
+      context: ./agents/communication
+      dockerfile: Dockerfile
+    environment:
+      - ENVIRONMENT=development
+      - GOOGLE_CLOUD_PROJECT=sentinelops-dev
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./src:/app/src
+      - ./agents/communication:/app/agents/communication
+
+  orchestrator:
+    build:
+      context: ./agents/orchestrator
+      dockerfile: Dockerfile
+    environment:
+      - ENVIRONMENT=development
+      - GOOGLE_CLOUD_PROJECT=sentinelops-dev
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./src:/app/src
+      - ./agents/orchestrator:/app/agents/orchestrator
+
+networks:
+  default:
+    driver: bridge

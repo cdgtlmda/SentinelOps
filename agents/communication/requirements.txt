@@ -1,0 +1,10 @@
+# Communication Agent specific requirements
+google-cloud-secret-manager>=2.17.0
+google-cloud-pubsub>=2.18.0
+google-cloud-firestore>=2.13.0
+google-cloud-logging>=3.8.0
+slack-sdk>=3.23.0
+twilio>=8.0.0
+jinja2>=3.1.0
+markdown>=3.4.0
+email-validator>=2.0.0

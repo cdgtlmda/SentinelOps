@@ -1,0 +1,21 @@
+firestore_replication:
+  backup_schedule:
+    frequency: DAILY
+    locations:
+    - us-central1
+    - us-east1
+    - us-west1
+    retention_days: 30
+  primary:
+    location: us-central1
+    replication_type: SYNCHRONOUS
+    type: REGIONAL
+  replicas:
+  - lag_tolerance_ms: 1000
+    location: us-east1
+    replication_type: ASYNCHRONOUS
+    type: REGIONAL
+  - lag_tolerance_ms: 2000
+    location: us-west1
+    replication_type: ASYNCHRONOUS
+    type: REGIONAL

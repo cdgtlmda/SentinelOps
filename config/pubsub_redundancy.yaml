@@ -1,0 +1,187 @@
+pubsub_redundancy:
+  topics:
+    analysis-topic:
+      message_retention: 7d
+      name: analysis-topic
+      subscriptions:
+      - ack_deadline: 600
+        dead_letter_policy:
+          max_delivery_attempts: 5
+          topic: analysis-dlq-topic
+        enable_message_ordering: true
+        name: analysis-subscription-us-central1
+        priority: 1
+        region: us-central1
+        retry_policy:
+          maximum_backoff: 600s
+          minimum_backoff: 10s
+      - ack_deadline: 600
+        dead_letter_policy:
+          max_delivery_attempts: 5
+          topic: analysis-dlq-topic
+        enable_message_ordering: true
+        name: analysis-subscription-us-east1
+        priority: 2
+        region: us-east1
+        retry_policy:
+          maximum_backoff: 600s
+          minimum_backoff: 10s
+      - ack_deadline: 600
+        dead_letter_policy:
+          max_delivery_attempts: 5
+          topic: analysis-dlq-topic
+        enable_message_ordering: true
+        name: analysis-subscription-us-west1
+        priority: 3
+        region: us-west1
+        retry_policy:
+          maximum_backoff: 600s
+          minimum_backoff: 10s
+    communication-topic:
+      message_retention: 7d
+      name: communication-topic
+      subscriptions:
+      - ack_deadline: 600
+        dead_letter_policy:
+          max_delivery_attempts: 5
+          topic: communication-dlq-topic
+        enable_message_ordering: true
+        name: communication-subscription-us-central1
+        priority: 1
+        region: us-central1
+        retry_policy:
+          maximum_backoff: 600s
+          minimum_backoff: 10s
+      - ack_deadline: 600
+        dead_letter_policy:
+          max_delivery_attempts: 5
+          topic: communication-dlq-topic
+        enable_message_ordering: true
+        name: communication-subscription-us-east1
+        priority: 2
+        region: us-east1
+        retry_policy:
+          maximum_backoff: 600s
+          minimum_backoff: 10s
+      - ack_deadline: 600
+        dead_letter_policy:
+          max_delivery_attempts: 5
+          topic: communication-dlq-topic
+        enable_message_ordering: true
+        name: communication-subscription-us-west1
+        priority: 3
+        region: us-west1
+        retry_policy:
+          maximum_backoff: 600s
+          minimum_backoff: 10s
+    detection-topic:
+      message_retention: 7d
+      name: detection-topic
+      subscriptions:
+      - ack_deadline: 600
+        dead_letter_policy:
+          max_delivery_attempts: 5
+          topic: detection-dlq-topic
+        enable_message_ordering: true
+        name: detection-subscription-us-central1
+        priority: 1
+        region: us-central1
+        retry_policy:
+          maximum_backoff: 600s
+          minimum_backoff: 10s
+      - ack_deadline: 600
+        dead_letter_policy:
+          max_delivery_attempts: 5
+          topic: detection-dlq-topic
+        enable_message_ordering: true
+        name: detection-subscription-us-east1
+        priority: 2
+        region: us-east1
+        retry_policy:
+          maximum_backoff: 600s
+          minimum_backoff: 10s
+      - ack_deadline: 600
+        dead_letter_policy:
+          max_delivery_attempts: 5
+          topic: detection-dlq-topic
+        enable_message_ordering: true
+        name: detection-subscription-us-west1
+        priority: 3
+        region: us-west1
+        retry_policy:
+          maximum_backoff: 600s
+          minimum_backoff: 10s
+    orchestration-topic:
+      message_retention: 7d
+      name: orchestration-topic
+      subscriptions:
+      - ack_deadline: 600
+        dead_letter_policy:
+          max_delivery_attempts: 5
+          topic: orchestration-dlq-topic
+        enable_message_ordering: true
+        name: orchestration-subscription-us-central1
+        priority: 1
+        region: us-central1
+        retry_policy:
+          maximum_backoff: 600s
+          minimum_backoff: 10s
+      - ack_deadline: 600
+        dead_letter_policy:
+          max_delivery_attempts: 5
+          topic: orchestration-dlq-topic
+        enable_message_ordering: true
+        name: orchestration-subscription-us-east1
+        priority: 2
+        region: us-east1
+        retry_policy:
+          maximum_backoff: 600s
+          minimum_backoff: 10s
+      - ack_deadline: 600
+        dead_letter_policy:
+          max_delivery_attempts: 5
+          topic: orchestration-dlq-topic
+        enable_message_ordering: true
+        name: orchestration-subscription-us-west1
+        priority: 3
+        region: us-west1
+        retry_policy:
+          maximum_backoff: 600s
+          minimum_backoff: 10s
+    remediation-topic:
+      message_retention: 7d
+      name: remediation-topic
+      subscriptions:
+      - ack_deadline: 600
+        dead_letter_policy:
+          max_delivery_attempts: 5
+          topic: remediation-dlq-topic
+        enable_message_ordering: true
+        name: remediation-subscription-us-central1
+        priority: 1
+        region: us-central1
+        retry_policy:
+          maximum_backoff: 600s
+          minimum_backoff: 10s
+      - ack_deadline: 600
+        dead_letter_policy:
+          max_delivery_attempts: 5
+          topic: remediation-dlq-topic
+        enable_message_ordering: true
+        name: remediation-subscription-us-east1
+        priority: 2
+        region: us-east1
+        retry_policy:
+          maximum_backoff: 600s
+          minimum_backoff: 10s
+      - ack_deadline: 600
+        dead_letter_policy:
+          max_delivery_attempts: 5
+          topic: remediation-dlq-topic
+        enable_message_ordering: true
+        name: remediation-subscription-us-west1
+        priority: 3
+        region: us-west1
+        retry_policy:
+          maximum_backoff: 600s
+          minimum_backoff: 10s
